@@ -1,7 +1,7 @@
 # mybybitapi
 [![Go 1.19.0](https://img.shields.io/badge/Go-1.19.0-brightgreen.svg)](https://github.com/Hongssd/mybybitapi)
 [![Contributor Victor](https://img.shields.io/badge/contributor-Victor-blue.svg)](https://github.com/Hongssd/mybybitapi)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Hongssd/mybybitapi/LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Hongssd/mybybitapi/blob/master/LICENSE)
 
 # Table of Contents
 - [Require](#Require)
