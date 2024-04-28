@@ -5,7 +5,7 @@ import (
 	"compress/gzip"
 	"crypto/hmac"
 	"crypto/sha256"
-	"encoding/base64"
+	"encoding/hex"
 	"io"
 	"sync"
 	"time"
@@ -145,13 +145,31 @@ const (
 type Category string
 
 const (
-	SPOT    Category = "spot"
-	LINEAR  Category = "linear"
-	INVERSE Category = "inverse"
-	OPTION  Category = "option"
+	CAT_SPOT    Category = "spot"
+	CAT_LINEAR  Category = "linear"
+	CAT_INVERSE Category = "inverse"
+	CAT_OPTION  Category = "option"
+)
+
+type AccountType string
+
+const (
+	// CONTRACT合約帳戶
+	// SPOT現貨帳戶
+	// OPTION USDC合約帳戶
+	// FUND資金帳戶
+	// UNIFIED統一帳戶
+	ACCT_CONTRACT AccountType = "CONTRACT"
+	ACCT_SPOT     AccountType = "SPOT"
+	ACCT_OPTION   AccountType = "OPTION"
+	ACCT_FUND     AccountType = "FUND"
+	ACCT_UNIFIED  AccountType = "UNIFIED"
 )
 
 func (c Category) String() string {
+	return string(c)
+}
+func (c AccountType) String() string {
 	return string(c)
 }
 
@@ -239,14 +257,17 @@ func bybitCallAPIWithSecret[T any](client *Client, url url.URL, reqBody []byte, 
 	if len(reqBody) != 0 {
 		hmacSha256Data += string(reqBody)
 	}
-	sign := base64.StdEncoding.EncodeToString(HmacSha256(client.SecretKey, hmacSha256Data))
 
-	log.Warn("bybit timestamp: ", timestamp)
-	log.Warn("bybit method: ", method)
-	log.Warn("bybit query: ", query)
-	log.Warn("bybit reqBody: ", string(reqBody))
-	log.Warn("bybit hmacSha256Data: ", hmacSha256Data)
-	log.Warn("bybit sign: ", sign)
+	signByte := HmacSha256(client.SecretKey, hmacSha256Data)
+	//对signByte进行16进制转化
+	sign := hex.EncodeToString(signByte)
+
+	//log.Warn("bybit timestamp: ", timestamp)
+	//log.Warn("bybit method: ", method)
+	//log.Warn("bybit query: ", query)
+	//log.Warn("bybit reqBody: ", string(reqBody))
+	//log.Warn("bybit hmacSha256Data: ", hmacSha256Data)
+	//log.Warn("bybit sign: ", sign)
 
 	body, err := RequestWithHeader(url.String(), reqBody, method,
 		map[string]string{

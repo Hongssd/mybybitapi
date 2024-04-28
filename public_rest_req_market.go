@@ -148,3 +148,43 @@ func (api *MarketOrderBookAPI) Limit(limit int) *MarketOrderBookAPI {
 	api.req.Limit = &limit
 	return api
 }
+
+// category	true	string	產品類型. spot,linear,inverse,option
+// symbol	false	string	合約名稱
+// baseCoin	false	string	交易幣種. 僅option有效, baseCoin和symbol必傳其中一個
+// expDate	false	string	到期日. 舉例, 25DEC22. 僅option有效
+type MarketTickersReq struct {
+	Category *string `json:"category"` //String	true	string	產品類型. spot,linear,inverse,option
+	Symbol   *string `json:"symbol"`   //String	false	string	合約名稱
+	BaseCoin *string `json:"baseCoin"` //String	false	string	交易幣種. 僅option有效, baseCoin和symbol必傳其中一個
+	ExpDate  *string `json:"expDate"`  //String	false	string	到期日. 舉例, 25DEC22. 僅option有效
+}
+
+type MarketTickersAPI struct {
+	client *PublicRestClient
+	req    *MarketTickersReq
+}
+
+// category	true	string	產品類型. spot,linear,inverse,option
+func (api *MarketTickersAPI) Category(category string) *MarketTickersAPI {
+	api.req.Category = GetPointer(category)
+	return api
+}
+
+// symbol	false	string	合約名稱
+func (api *MarketTickersAPI) Symbol(symbol string) *MarketTickersAPI {
+	api.req.Symbol = GetPointer(symbol)
+	return api
+}
+
+// baseCoin	false	string	交易幣種. 僅option有效, baseCoin和symbol必傳其中一個
+func (api *MarketTickersAPI) BaseCoin(baseCoin string) *MarketTickersAPI {
+	api.req.BaseCoin = GetPointer(baseCoin)
+	return api
+}
+
+// expDate	false	string	到期日. 舉例, 25DEC22. 僅option有效
+func (api *MarketTickersAPI) ExpDate(expDate string) *MarketTickersAPI {
+	api.req.ExpDate = GetPointer(expDate)
+	return api
+}

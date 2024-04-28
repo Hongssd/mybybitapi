@@ -55,3 +55,15 @@ func (api *MarketOrderBookAPI) Do() (*BybitRestRes[MarketOrderBookRes], error) {
 	}
 	return resConvertTo(res, res.Result.ConvertToRes()), nil
 }
+
+// bybit MarketTickers PublicRest接口 GET 查詢最新行情信息
+func (client *PublicRestClient) NewMarketTickers() *MarketTickersAPI {
+	return &MarketTickersAPI{
+		client: client,
+		req:    &MarketTickersReq{},
+	}
+}
+func (api *MarketTickersAPI) Do() (*BybitRestRes[MarketTickersRes], error) {
+	url := bybitHandlerRequestAPIWithPathQueryParam(REST, api.req, PublicRestAPIMap[MarketTickers])
+	return bybitCallAPI[MarketTickersRes](api.client.c, url, NIL_REQBODY, GET)
+}
