@@ -102,9 +102,6 @@ func RequestWithHeader(url string, reqBody []byte, method string, headerMap map[
 	return data, err
 }
 
-type MyBybit struct {
-}
-
 const (
 	BYBIT_API_HTTP           = "api.bybit.com"
 	BYBIT_API_WEBSOCKET      = "stream.bybit.com"
@@ -202,7 +199,7 @@ func WithRecvWindow(recvWindow int64) RestClientOption {
 	}
 }
 
-func (*MyBybit) NewRestClient(APIKey, SecretKey string, options ...RestClientOption) *RestClient {
+func NewRestClient(APIKey, SecretKey string, options ...RestClientOption) *RestClient {
 	client := &RestClient{
 		c: &Client{
 			APIKey:    APIKey,
