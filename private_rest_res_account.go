@@ -40,3 +40,15 @@ type AccountWalletBalanceResRowCoin struct {
 	MarginCollateral    bool   `json:"marginCollateral"`    //是否可作為保證金抵押幣種(平台維度), true: 是. false: 否
 	CollateralSwitch    bool   `json:"collateralSwitch"`    //用戶是否開啟保證金幣種抵押(用戶維度), true: 是. false: 否
 }
+
+type AccountFeeRateRes struct {
+	Category string                 `json:"category"` //產品類型. spot, option. 期貨不返回該字段
+	List     []AccountFeeRateResRow `json:"list"`
+}
+
+type AccountFeeRateResRow struct {
+	Symbol       string `json:"symbol"`       //合約名稱. 期權總是為""
+	BaseCoin     string `json:"baseCoin"`     //交易幣種. SOL, BTC, ETH 期貨不返回該字段 現貨總是返回""
+	TakerFeeRate string `json:"takerFeeRate"` //吃單手續費率
+	MakerFeeRate string `json:"makerFeeRate"` //掛單手續費率
+}
