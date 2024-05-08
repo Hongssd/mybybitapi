@@ -130,9 +130,11 @@ type APIType int
 
 const (
 	REST APIType = iota
-	WS_PUBLIC
+	WS_PUBLIC_SPOT
+	WS_PUBLIC_LINEAR
+	WS_PUBLIC_INVERSE
+	WS_PUBLIC_OPTION
 	WS_PRIVATE
-	WS_BUSINESS
 )
 
 // spot 現貨
@@ -142,6 +144,7 @@ const (
 type Category string
 
 const (
+	CAT_ALL     Category = "all"
 	CAT_SPOT    Category = "spot"
 	CAT_LINEAR  Category = "linear"
 	CAT_INVERSE Category = "inverse"

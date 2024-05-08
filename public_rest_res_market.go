@@ -1,5 +1,7 @@
 package mybybitapi
 
+import "github.com/shopspring/decimal"
+
 type InstrumentsInfoResRow struct {
 	Symbol        string        `json:"symbol"`        // 合約名稱
 	BaseCoin      string        `json:"baseCoin"`      // 交易幣種
@@ -146,6 +148,14 @@ type MarketOrderBookMiddle struct {
 type Books struct {
 	Price    string `json:"price"`    //价格
 	Quantity string `json:"quantity"` //合约张数或交易币的数量
+}
+
+func (b *Books) Float64Result() (float64, float64) {
+	return stringToFloat64(b.Price), stringToFloat64(b.Quantity)
+}
+
+func (b *Books) DecimalResult() (decimal.Decimal, decimal.Decimal) {
+	return decimal.RequireFromString(b.Price), decimal.RequireFromString(b.Quantity)
 }
 
 type BooksMiddle [2]interface{}
