@@ -1,35 +1,35 @@
 package mybybitapi
 
 type OrderCreateReq struct {
-	Category         *string `json:"category"`         //string	true	產品類型 統一帳戶: spot, linear, inverse, option 經典帳戶: spot, linear, inverse
-	Symbol           *string `json:"symbol"`           //string	true	合約名稱
-	IsLeverage       *int    `json:"isLeverage"`       //integer	false	是否借貸. 僅統一帳戶的現貨交易有效. 0(default): 否，則是幣幣訂單, 1: 是，則是槓桿訂單
-	Side             *string `json:"side"`             //string	true	Buy, Sell
-	OrderType        *string `json:"orderType"`        //string	true	訂單類型. Market, Limit
-	Qty              *string `json:"qty"`              //string	true	訂單數量 統一帳戶 現貨: 可以通過設置marketUnit來表示市價單qty的單位, 市價買單默認是quoteCoin, 市價賣單默認是baseCoin 期貨和期權: 總是以base coin作為qty的單位 經典帳戶 現貨: 市價買單的qty總是以quote coin為單位, 其他情況下, qty都是以base coin為單位 期貨: qty總是以base coin為單位 期貨: 如果傳入qty="0"以及reduceOnly="true", 則可以全部平掉對應合約的倉位
-	MarketUnit       *string `json:"marketUnit"`       //string	false	統一帳戶現貨交易創建市價單時給入參qty指定的單位. 当前不支持止盈/止损和条件单 baseCoin: 比如, 買BTCUSDT, 則"qty"的單位是BTC quoteCoin: 比如, 賣BTCUSDT, 則"qty"的單位是USDT
-	Price            *string `json:"price"`            //string	false	訂單價格. 市價單將會忽視該字段 請通過該接口確認最低價格和精度要求 如果有持倉, 確保價格優於強平價格
-	TriggerDirection *int    `json:"triggerDirection"` //integer	false	條件單參數. 用於辨別期望的方向. 1: 當市場價上漲到了triggerPrice時觸發條件單 2: 當市場價下跌到了triggerPrice時觸發條件單 對linear和inverse有效
-	OrderFilter      *string `json:"orderFilter"`      //string	false	指定訂單品種. Order: 普通單,tpslOrder: 止盈止損單,StopOrder: 條件單. 若不傳, 默認Order 僅對現貨有效
-	TriggerPrice     *string `json:"triggerPrice"`     //string	false	對於期貨, 是條件單觸發價格參數. 若您希望市場價是要上升後觸發, 確保: triggerPrice > 市場價格 否則, triggerPrice < 市場價格 對於現貨, 這是下止盈止損單或者條件單的觸發價格參數
-	TriggerBy        *string `json:"triggerBy"`        //string	false	條件單參數. 觸發價格類型. LastPrice, IndexPrice, MarkPrice 僅對linear和inverse有效
-	OrderIv          *string `json:"orderIv"`          //string	false	隱含波動率. 僅option有效. 按照實際值傳入, e.g., 對於10%, 則傳入0.1. orderIv比price有更高的優先級
-	TimeInForce      *string `json:"timeInForce"`      //string	false	訂單執行策略 市價單，系統直接使用IOC 若不傳，默認使用GTC
-	PositionIdx      *int    `json:"positionIdx"`      //integer	false	倉位標識, 用戶不同倉位模式. 該字段對於雙向持倉模式(僅USDT永續和反向期貨有雙向模式)是必傳: 0: 單向持倉 1: 買側雙向持倉 2: 賣側雙向持倉 僅對linear和inverse有效
-	OrderLinkId      *string `json:"orderLinkId"`      //string	false	用戶自定義訂單Id. category=option時，該參數必傳
-	TakeProfit       *string `json:"takeProfit"`       //string	false	止盈價格 linear & inverse: 支援統一帳戶和經典帳戶 spot: 僅支持統一帳戶, 創建限價單時, 可以附帶市價止盈止損和限價止盈止損
-	StopLoss         *string `json:"stopLoss"`         //string	false	止損價格 linear & inverse: 支援統一帳戶和經典帳戶 spot: 僅支持統一帳戶, 創建限價單時, 可以附帶市價止盈止損和限價止盈止損
-	TpTriggerBy      *string `json:"tpTriggerBy"`      //string	false	觸發止盈的價格類型. MarkPrice, IndexPrice, 默認:LastPrice 僅對linear和inverse有效
-	SlTriggerBy      *string `json:"slTriggerBy"`      //string	false	觸發止損的價格類型. MarkPrice, IndexPrice, 默認:LastPrice 僅對linear和inverse有效
-	ReduceOnly       *bool   `json:"reduceOnly"`       //boolean	false	什麼是只減倉? true 將這筆訂單設為只減倉 當減倉時, reduceOnly=true必傳 只減倉單的止盈止損不生效 對linear, inverse和option有效
-	CloseOnTrigger   *bool   `json:"closeOnTrigger"`   //boolean	false	什麼是觸發後平倉委託?此選項可以確保您的止損單被用於減倉（平倉）而非加倉，並且在可用保證金不足的情況下，取消其他委託，騰出保證金以確保平倉委託的執行. 僅對linear和inverse有效
-	SmpType          *string `json:"smpType"`          //string	false	Smp執行類型. 什麼是SMP?
-	Mmp              *bool   `json:"mmp"`              //boolean	false	做市商保護. 僅option有效. true 表示該訂單是做市商保護訂單. 什麼是做市商保護?
-	TpslMode         *string `json:"tpslMode"`         //string	false	止盈止損模式 Full: 全部倉位止盈止損. 此時, tpOrderType或者slOrderType必須傳Market Partial: 部分倉位止盈止損(下單時沒有size選項, 實際上創建tpsl訂單時, 是按照實際成交的數量來生成止盈止損). 支持創建限價止盈止損. 注意: 創建限價止盈止損時, tpslMode必傳且為Partial 僅對linear和inverse有效
-	TpLimitPrice     *string `json:"tpLimitPrice"`     //string	false	觸發止盈後轉換為限價單的價格 linear & inverse: 僅作用於當tpslMode=Partial以及tpOrderType=Limit時 spot(UTA): 參數必傳當創建訂單時帶了takeProfit 和 tpOrderType=Limit
-	SlLimitPrice     *string `json:"slLimitPrice"`     //string	false	觸發止損後轉換為限價單的價格 linear & inverse: 僅作用於當tpslMode=Partial以及slOrderType=Limit時 spot(UTA): 參數必傳當創建訂單時帶了stopLoss 和 slOrderType=Limit
-	TpOrderType      *string `json:"tpOrderType"`      //string	false	止盈觸發後的訂單類型 linear & inverse: Market(默認), Limit. 對於tpslMode=Full, 僅支持tpOrderType=Market spot(UTA): Market: 當帶了參數"takeProfit", Limit: 當帶了參數"takeProfit" 和 "tpLimitPrice"
-	SlOrderType      *string `json:"slOrderType"`      //string	false	止損觸發後的訂單類型 linear & inverse: Market(默認), Limit. 對於tpslMode=Full, 僅支持slOrderType=Market spot(UTA): Market: 當帶了參數"stopLoss", Limit: 當帶了參數"stopLoss" 和 "slLimitPrice"
+	Category         *string `json:"category"`                   //string	true	產品類型 統一帳戶: spot, linear, inverse, option 經典帳戶: spot, linear, inverse
+	Symbol           *string `json:"symbol"`                     //string	true	合約名稱
+	IsLeverage       *int    `json:"isLeverage,omitempty"`       //integer	false	是否借貸. 僅統一帳戶的現貨交易有效. 0(default): 否，則是幣幣訂單, 1: 是，則是槓桿訂單
+	Side             *string `json:"side"`                       //string	true	Buy, Sell
+	OrderType        *string `json:"orderType"`                  //string	true	訂單類型. Market, Limit
+	Qty              *string `json:"qty"`                        //string	true	訂單數量 統一帳戶 現貨: 可以通過設置marketUnit來表示市價單qty的單位, 市價買單默認是quoteCoin, 市價賣單默認是baseCoin 期貨和期權: 總是以base coin作為qty的單位 經典帳戶 現貨: 市價買單的qty總是以quote coin為單位, 其他情況下, qty都是以base coin為單位 期貨: qty總是以base coin為單位 期貨: 如果傳入qty="0"以及reduceOnly="true", 則可以全部平掉對應合約的倉位
+	MarketUnit       *string `json:"marketUnit,omitempty"`       //string	false	統一帳戶現貨交易創建市價單時給入參qty指定的單位. 当前不支持止盈/止损和条件单 baseCoin: 比如, 買BTCUSDT, 則"qty"的單位是BTC quoteCoin: 比如, 賣BTCUSDT, 則"qty"的單位是USDT
+	Price            *string `json:"price,omitempty"`            //string	false	訂單價格. 市價單將會忽視該字段 請通過該接口確認最低價格和精度要求 如果有持倉, 確保價格優於強平價格
+	TriggerDirection *int    `json:"triggerDirection,omitempty"` //integer	false	條件單參數. 用於辨別期望的方向. 1: 當市場價上漲到了triggerPrice時觸發條件單 2: 當市場價下跌到了triggerPrice時觸發條件單 對linear和inverse有效
+	OrderFilter      *string `json:"orderFilter,omitempty"`      //string	false	指定訂單品種. Order: 普通單,tpslOrder: 止盈止損單,StopOrder: 條件單. 若不傳, 默認Order 僅對現貨有效
+	TriggerPrice     *string `json:"triggerPrice,omitempty"`     //string	false	對於期貨, 是條件單觸發價格參數. 若您希望市場價是要上升後觸發, 確保: triggerPrice > 市場價格 否則, triggerPrice < 市場價格 對於現貨, 這是下止盈止損單或者條件單的觸發價格參數
+	TriggerBy        *string `json:"triggerBy,omitempty"`        //string	false	條件單參數. 觸發價格類型. LastPrice, IndexPrice, MarkPrice 僅對linear和inverse有效
+	OrderIv          *string `json:"orderIv,omitempty"`          //string	false	隱含波動率. 僅option有效. 按照實際值傳入, e.g., 對於10%, 則傳入0.1. orderIv比price有更高的優先級
+	TimeInForce      *string `json:"timeInForce,omitempty"`      //string	false	訂單執行策略 市價單，系統直接使用IOC 若不傳，默認使用GTC
+	PositionIdx      *int    `json:"positionIdx,omitempty"`      //integer	false	倉位標識, 用戶不同倉位模式. 該字段對於雙向持倉模式(僅USDT永續和反向期貨有雙向模式)是必傳: 0: 單向持倉 1: 買側雙向持倉 2: 賣側雙向持倉 僅對linear和inverse有效
+	OrderLinkId      *string `json:"orderLinkId,omitempty"`      //string	false	用戶自定義訂單Id. category=option時，該參數必傳
+	TakeProfit       *string `json:"takeProfit,omitempty"`       //string	false	止盈價格 linear & inverse: 支援統一帳戶和經典帳戶 spot: 僅支持統一帳戶, 創建限價單時, 可以附帶市價止盈止損和限價止盈止損
+	StopLoss         *string `json:"stopLoss,omitempty"`         //string	false	止損價格 linear & inverse: 支援統一帳戶和經典帳戶 spot: 僅支持統一帳戶, 創建限價單時, 可以附帶市價止盈止損和限價止盈止損
+	TpTriggerBy      *string `json:"tpTriggerBy,omitempty"`      //string	false	觸發止盈的價格類型. MarkPrice, IndexPrice, 默認:LastPrice 僅對linear和inverse有效
+	SlTriggerBy      *string `json:"slTriggerBy,omitempty"`      //string	false	觸發止損的價格類型. MarkPrice, IndexPrice, 默認:LastPrice 僅對linear和inverse有效
+	ReduceOnly       *bool   `json:"reduceOnly,omitempty"`       //boolean	false	什麼是只減倉? true 將這筆訂單設為只減倉 當減倉時, reduceOnly=true必傳 只減倉單的止盈止損不生效 對linear, inverse和option有效
+	CloseOnTrigger   *bool   `json:"closeOnTrigger,omitempty"`   //boolean	false	什麼是觸發後平倉委託?此選項可以確保您的止損單被用於減倉（平倉）而非加倉，並且在可用保證金不足的情況下，取消其他委託，騰出保證金以確保平倉委託的執行. 僅對linear和inverse有效
+	SmpType          *string `json:"smpType,omitempty"`          //string	false	Smp執行類型. 什麼是SMP?
+	Mmp              *bool   `json:"mmp,omitempty"`              //boolean	false	做市商保護. 僅option有效. true 表示該訂單是做市商保護訂單. 什麼是做市商保護?
+	TpslMode         *string `json:"tpslMode,omitempty"`         //string	false	止盈止損模式 Full: 全部倉位止盈止損. 此時, tpOrderType或者slOrderType必須傳Market Partial: 部分倉位止盈止損(下單時沒有size選項, 實際上創建tpsl訂單時, 是按照實際成交的數量來生成止盈止損). 支持創建限價止盈止損. 注意: 創建限價止盈止損時, tpslMode必傳且為Partial 僅對linear和inverse有效
+	TpLimitPrice     *string `json:"tpLimitPrice,omitempty"`     //string	false	觸發止盈後轉換為限價單的價格 linear & inverse: 僅作用於當tpslMode=Partial以及tpOrderType=Limit時 spot(UTA): 參數必傳當創建訂單時帶了takeProfit 和 tpOrderType=Limit
+	SlLimitPrice     *string `json:"slLimitPrice,omitempty"`     //string	false	觸發止損後轉換為限價單的價格 linear & inverse: 僅作用於當tpslMode=Partial以及slOrderType=Limit時 spot(UTA): 參數必傳當創建訂單時帶了stopLoss 和 slOrderType=Limit
+	TpOrderType      *string `json:"tpOrderType,omitempty"`      //string	false	止盈觸發後的訂單類型 linear & inverse: Market(默認), Limit. 對於tpslMode=Full, 僅支持tpOrderType=Market spot(UTA): Market: 當帶了參數"takeProfit", Limit: 當帶了參數"takeProfit" 和 "tpLimitPrice"
+	SlOrderType      *string `json:"slOrderType,omitempty"`      //string	false	止損觸發後的訂單類型 linear & inverse: Market(默認), Limit. 對於tpslMode=Full, 僅支持slOrderType=Market spot(UTA): Market: 當帶了參數"stopLoss", Limit: 當帶了參數"stopLoss" 和 "slLimitPrice"
 }
 
 type OrderCreateAPI struct {

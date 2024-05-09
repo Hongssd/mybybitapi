@@ -411,3 +411,12 @@ func handleWsExecution(data []byte) (*WsExecution, error) {
 	}
 	return &wsExecution, nil
 }
+
+func handleWsDoOrderResult[T OrderResType](data []byte) (*WsOrderResult[T], error) {
+	wsOrderResult := WsOrderResult[T]{}
+	err := json.Unmarshal(data, &wsOrderResult)
+	if err != nil {
+		return nil, err
+	}
+	return &wsOrderResult, nil
+}

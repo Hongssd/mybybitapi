@@ -20,6 +20,7 @@ const (
 	BYBIT_API_WS_PUBLIC_INVERSE = "/v5/public/inverse" //反向合约公共频道
 	BYBIT_API_WS_PUBLIC_OPTION  = "/v5/public/option"  //期权公共频道
 	BYBIT_API_WS_PRIVATE        = "/v5/private"        //私有频道
+	BYBIT_API_WS_TRADE          = "/v5/trade"          //ws下单交易频道
 )
 
 const (
@@ -46,6 +47,8 @@ type WsStreamClient struct {
 	connId       string
 	commonSubMap MySyncMap[string, *Subscription[WsActionResult]] //订阅的返回结果
 
+	waitAuthResult   *Subscription[WsAuthResult]
+	waitAuthResultMu *sync.Mutex
 	waitSubResultMap MySyncMap[string, *Subscription[WsActionResult]]
 
 	klineSubMap MySyncMap[string, *Subscription[WsKline]]
@@ -57,6 +60,13 @@ type WsStreamClient struct {
 	positionSubMap  MySyncMap[string, *Subscription[WsPosition]]
 	executionSubMap MySyncMap[string, *Subscription[WsExecution]]
 
+	waitOrderCreateResult *WsOrderParamSend[OrderCreateReq, OrderCreateRes]
+	waitOrderCancelResult *WsOrderParamSend[OrderCancelReq, OrderCancelRes]
+	waitOrderAmendResult  *WsOrderParamSend[OrderAmendReq, OrderAmendRes]
+	waitOrderCreateMu     *sync.Mutex
+	waitOrderCancelMu     *sync.Mutex
+	waitOrderAmendMu      *sync.Mutex
+
 	resultChan chan []byte
 	errChan    chan error
 	isClose    bool
@@ -67,15 +77,46 @@ type WsStreamClient struct {
 
 // 登陆请求相关
 type WsAuthReq struct {
-	ReqId string         `json:"req_id"`
+	ReqId string         `json:"req_id,omitempty"`
 	Op    string         `json:"op"`   //String 是操作
 	Args  [3]interface{} `json:"args"` //Array 是请求订阅的频道列表
 }
 
+// 授权请求参数
 type WsAuthArg struct {
 	ApiKey    string `json:"apiKey"`
 	Expire    int64  `json:"expire"`
 	Signature string `json:"signature"`
+}
+
+type OrderReqType interface {
+	OrderCreateReq | OrderCancelReq | OrderAmendReq
+}
+
+type OrderResType interface {
+	OrderCreateRes | OrderCancelRes | OrderAmendRes
+}
+
+type WsOrderReqHeader struct {
+	XBapiTimestamp  string `json:"X-BAPI-TIMESTAMP"`
+	XBapiRecvWindow string `json:"X-BAPI-RECV-WINDOW"`
+	Referer         string `json:"Referer"`
+}
+
+type WsOrderResHeader struct {
+	Traceid                  string `json:"Traceid"`                      //Trace ID, 用於追蹤請求鏈路 (內部使用)
+	Timenow                  string `json:"Timenow"`                      //當前時間戳
+	XBapiLimit               string `json:"X-Bapi-Limit"`                 //該類型請求的帳戶總頻率
+	XBapiLimitStatus         string `json:"X-Bapi-Limit-Status"`          //該類型請求的帳戶剩餘可用頻率
+	XBapiLimitResetTimestamp string `json:"X-Bapi-Limit-Reset-Timestamp"` //如果您已超過該接口當前窗口頻率限製，該字段表示下個可用時間窗口的時間戳（毫秒）即什麽時候可以恢復訪問；如果您未超過該接口當前窗口頻率限製，該字段表示返回的是當前服務器時間（毫秒).
+}
+
+// ws下单/撤单/改单请求参数
+type WsOrderArg[T OrderReqType] struct {
+	ReqId  string           `json:"req_id"` //請求reqId, 可作為請求的唯一標識, 若有傳, 則響應會返回該字段 當傳, 需保證唯一, 否則將會拿到錯誤 "20006"
+	Header WsOrderReqHeader `json:"header"` //請求頭
+	Op     string           `json:"op"`     //Op類型 order.create: 創建訂單 order.amend: 修改訂單 order.cancel: 撤銷訂單
+	Args   [1]T             `json:"args"`   //參數數組, 目前僅支持一個元素 order.create: 請參閱創建訂單請求參數 order.amend: 請參閱修改訂單參數 order.cancel: 請參閱撤銷訂單參數
 }
 
 // 订阅请求相关
@@ -94,6 +135,25 @@ type WsActionResult struct {
 	Op      string `json:"op"`
 }
 
+// 单独授权接口返回结果
+type WsAuthResult struct {
+	RetCode int    `json:"retCode"`
+	RetMsg  string `json:"retMsg"`
+	Op      string `json:"op"`
+	ConnId  string `json:"connId"`
+}
+
+// 下单/撤单/改单返回结果
+type WsOrderResult[T OrderResType] struct {
+	ReqId   string           `json:"req_id"`   //若請求有傳, 則響應存在該字段 若請求不傳, 則響應沒有該字段
+	RetCode int              `json:"ret_code"` //0: 成功 10404: 1. op類型未找到; 2. category不支持/未找到 10429: 觸發系統級別的頻率保護 20006: reqId重複 10016: 1.內部錯誤; 2. 服務重啟 10019: ws下單服務正在重啟, 拒絕新的請求, 正在處理中的請求不受影響. 您可以重新/新建連接, 會分配到正常的服務上
+	RetMsg  string           `json:"ret_msg"`  //OK "" 報錯信息
+	Op      string           `json:"op"`       //Op類型
+	Data    T                `json:"data"`     //業務數據, 和rest api響應的result字段業務數據一致 order.create: 請參閱創建訂單響應參數 order.amend: 請參閱修改訂單響應參數 order.cancel: 請參閱取消訂單響應參數
+	Header  WsOrderResHeader `json:"header"`   //響應頭信息 TraceId string Trace ID, 用於追蹤請求鏈路 (內部使用) Timenow string 當前時間戳 X-Bapi-Limit string 該類型請求的帳戶總頻率 X-Bapi-Limit-Status string 該類型請求的帳戶剩餘可用頻率 X-Bapi-Limit-Reset-Timestamp string 如果您已超過該接口當前窗口頻率限製，該字段表示下個可用時間窗口的時間戳（毫秒）即什麽時候可以恢復訪問；如果您未超過該接口當前窗口頻率限製，該字段表示返回的是當前服務器時間（毫秒).
+	ConnId  string           `json:"conn_id"`  //連接的唯一id
+}
+
 // 数据流订阅标准结构体
 type Subscription[T any] struct {
 	SubId        int64           //订阅ID
@@ -104,6 +164,17 @@ type Subscription[T any] struct {
 	errChan      chan error      //接收订阅错误的通道
 	closeChan    chan struct{}   //接收订阅关闭的通道
 	subResultMap map[string]bool //订阅结果
+}
+
+// ws下单/撤单/改单单次请求
+type WsOrderParamSend[T OrderReqType, R OrderResType] struct {
+	ReqId      string          //请求ID
+	Ws         *WsStreamClient //订阅的连接
+	Op         string          //订阅方法
+	Args       WsOrderArg[T]
+	resultChan chan WsOrderResult[R]
+	errChan    chan error
+	closeChan  chan struct{}
 }
 
 // 获取订阅结果
@@ -125,10 +196,26 @@ func (ws *WsStreamClient) GetConn() *websocket.Conn {
 	return ws.conn
 }
 
-func (ws *WsStreamClient) auth(op string, arg WsAuthArg) (*Subscription[WsActionResult], error) {
+// 获取订阅结果
+func (sub *WsOrderParamSend[T, R]) ResultChan() chan WsOrderResult[R] {
+	return sub.resultChan
+}
+
+// 获取错误订阅
+func (sub *WsOrderParamSend[T, R]) ErrChan() chan error {
+	return sub.errChan
+}
+
+// 获取关闭订阅信号
+func (sub *WsOrderParamSend[T, R]) CloseChan() chan struct{} {
+	return sub.closeChan
+}
+
+func (ws *WsStreamClient) authPrivate(op string, arg WsAuthArg) (*Subscription[WsActionResult], error) {
 	if ws == nil || ws.conn == nil || ws.isClose {
 		return nil, fmt.Errorf("websocket is close")
 	}
+
 	node, err := snowflake.NewNode(3)
 	if err != nil {
 		return nil, err
@@ -157,6 +244,39 @@ func (ws *WsStreamClient) auth(op string, arg WsAuthArg) (*Subscription[WsAction
 		subResultMap: map[string]bool{},
 	}
 	ws.waitSubResultMap.Store(strconv.FormatInt(id, 10), resultSub)
+	log.Debugf("send msg: %s", string(data))
+	err = ws.conn.WriteMessage(websocket.TextMessage, data)
+	if err != nil {
+		return nil, err
+	}
+	return resultSub, nil
+}
+
+func (ws *WsStreamClient) authTrade(op string, arg WsAuthArg) (*Subscription[WsAuthResult], error) {
+	if ws == nil || ws.conn == nil || ws.isClose {
+		return nil, fmt.Errorf("websocket is close")
+	}
+
+	authReq := WsAuthReq{
+		Op:   op,
+		Args: [3]interface{}{arg.ApiKey, arg.Expire, arg.Signature},
+	}
+	data, err := json.Marshal(authReq)
+	if err != nil {
+		return nil, err
+	}
+
+	ws.lastAuth = &authReq
+	resultSub := &Subscription[WsAuthResult]{
+		Op:           op,
+		Args:         []string{},
+		resultChan:   make(chan WsAuthResult, 50),
+		errChan:      make(chan error),
+		closeChan:    make(chan struct{}),
+		Ws:           ws,
+		subResultMap: map[string]bool{},
+	}
+	ws.waitAuthResult = resultSub
 	log.Debugf("send msg: %s", string(data))
 	err = ws.conn.WriteMessage(websocket.TextMessage, data)
 	if err != nil {
@@ -207,6 +327,50 @@ func (ws *WsStreamClient) subscribe(op string, args []string) (*Subscription[WsA
 	return resultSub, nil
 }
 
+func doOrder[T OrderReqType, R OrderResType](ws *WsStreamClient, op string, arg T) (*WsOrderParamSend[T, R], error) {
+	if ws == nil || ws.conn == nil || ws.isClose {
+		return nil, fmt.Errorf("websocket is close")
+	}
+
+	node, err := snowflake.NewNode(3)
+	if err != nil {
+		return nil, err
+	}
+	id := node.Generate().Int64()
+
+	doOrderArg := WsOrderArg[T]{
+		ReqId: strconv.FormatInt(id, 10),
+		Header: WsOrderReqHeader{
+			XBapiTimestamp:  strconv.FormatInt(time.Now().UnixNano()/1e6, 10),
+			XBapiRecvWindow: ws.client.c.RecvWindow,
+			Referer:         ws.client.c.Referer,
+		},
+		Op:   op,
+		Args: [1]T{arg},
+	}
+	data, err := json.Marshal(doOrderArg)
+	if err != nil {
+		return nil, err
+	}
+
+	resultParamSend := &WsOrderParamSend[T, R]{
+		ReqId:      strconv.FormatInt(id, 10),
+		Op:         op,
+		Args:       doOrderArg,
+		resultChan: make(chan WsOrderResult[R], 50),
+		errChan:    make(chan error),
+		closeChan:  make(chan struct{}),
+		Ws:         ws,
+	}
+	log.Debugf("send msg: %s", string(data))
+
+	err = ws.conn.WriteMessage(websocket.TextMessage, data)
+	if err != nil {
+		return nil, err
+	}
+	return resultParamSend, nil
+}
+
 func (ws *WsStreamClient) Close() error {
 	ws.isClose = true
 	ws.connId = ""
@@ -234,6 +398,11 @@ func (ws *WsStreamClient) Close() error {
 	ws.positionSubMap = NewMySyncMap[string, *Subscription[WsPosition]]()
 	ws.executionSubMap = NewMySyncMap[string, *Subscription[WsExecution]]()
 
+	if ws.waitAuthResult != nil {
+		ws.waitAuthResult.errChan <- fmt.Errorf("websocket is closed")
+		ws.waitAuthResult = nil
+	}
+
 	if ws.waitSubResultMap.Length() != 0 {
 		//给当前等待订阅结果的请求返回错误
 		ws.waitSubResultMap.Range(func(key string, value *Subscription[WsActionResult]) bool {
@@ -241,6 +410,25 @@ func (ws *WsStreamClient) Close() error {
 			ws.waitSubResultMap.Delete(key)
 			return true
 		})
+	}
+
+	if ws.waitOrderCreateResult != nil {
+		//给当前等待下单结果的请求返回错误
+		ws.waitOrderCreateResult.errChan <- fmt.Errorf("websocket is closed")
+		ws.waitOrderCreateResult = nil
+	}
+
+	if ws.waitOrderCancelResult != nil {
+		//给当前等待撤单结果的请求返回错误
+		ws.waitOrderCancelResult.errChan <- fmt.Errorf("websocket is closed")
+		ws.waitOrderCancelResult = nil
+	}
+
+	if ws.waitOrderAmendResult != nil {
+		//给当前等待改单结果的请求返回错误
+		ws.waitOrderAmendResult.errChan <- fmt.Errorf("websocket is closed")
+		ws.waitOrderAmendResult = nil
+
 	}
 
 	return nil
@@ -278,11 +466,19 @@ type PublicWsStreamClient struct {
 type PrivateWsStreamClient struct {
 	WsStreamClient
 }
+type TradeWsStreamClient struct {
+	WsStreamClient
+}
 
 func newWsStreamClient(apiType APIType) WsStreamClient {
 	return WsStreamClient{
-		apiType:         apiType,
-		commonSubMap:    NewMySyncMap[string, *Subscription[WsActionResult]](),
+		apiType:      apiType,
+		commonSubMap: NewMySyncMap[string, *Subscription[WsActionResult]](),
+
+		waitAuthResult:   nil,
+		waitAuthResultMu: &sync.Mutex{},
+		waitSubResultMap: NewMySyncMap[string, *Subscription[WsActionResult]](),
+
 		klineSubMap:     NewMySyncMap[string, *Subscription[WsKline]](),
 		depthSubMap:     NewMySyncMap[string, *Subscription[WsDepth]](),
 		tradeSubMap:     NewMySyncMap[string, *Subscription[WsTrade]](),
@@ -291,8 +487,13 @@ func newWsStreamClient(apiType APIType) WsStreamClient {
 		positionSubMap:  NewMySyncMap[string, *Subscription[WsPosition]](),
 		executionSubMap: NewMySyncMap[string, *Subscription[WsExecution]](),
 
-		waitSubResultMap: NewMySyncMap[string, *Subscription[WsActionResult]](),
-		reSubscribeMu:    &sync.Mutex{},
+		waitOrderCreateResult: nil,
+		waitOrderCancelResult: nil,
+		waitOrderAmendResult:  nil,
+		waitOrderCreateMu:     &sync.Mutex{},
+		waitOrderCancelMu:     &sync.Mutex{},
+		waitOrderAmendMu:      &sync.Mutex{},
+		reSubscribeMu:         &sync.Mutex{},
 	}
 }
 
@@ -322,6 +523,12 @@ func NewPrivateWsStreamClient() *PrivateWsStreamClient {
 	}
 }
 
+func NewTradeWsStreamClient() *TradeWsStreamClient {
+	return &TradeWsStreamClient{
+		WsStreamClient: newWsStreamClient(WS_TRADE),
+	}
+}
+
 func (ws *WsStreamClient) CurrentSubList() []string {
 	list := []string{}
 	ws.commonSubMap.Range(func(key string, _ *Subscription[WsActionResult]) bool {
@@ -329,6 +536,20 @@ func (ws *WsStreamClient) CurrentSubList() []string {
 		return true
 	})
 	return list
+}
+
+func (ws *WsStreamClient) sendAuthResultToChan(result WsAuthResult) {
+	if ws.connId == "" && result.ConnId != "" {
+		ws.connId = result.ConnId
+	}
+	if ws.waitAuthResult != nil {
+		if result.RetCode != 0 {
+			d, _ := json.Marshal(result)
+			ws.waitAuthResult.errChan <- fmt.Errorf("errHandler: %s", string(d))
+		} else {
+			ws.waitAuthResult.resultChan <- result
+		}
+	}
 }
 
 func (ws *WsStreamClient) sendSubscribeResultToChan(result WsActionResult) {
@@ -491,9 +712,9 @@ func (ws *WsStreamClient) handleResult(resultChan chan []byte, errChan chan erro
 					log.Error("resultChan is closed")
 					return
 				}
-				// log.Debug("receive result: ", string(data))
+				//log.Debug("receive result: ", string(data))
 				//处理订阅或查询订阅列表请求返回结果
-				if strings.Contains(string(data), "success") || strings.Contains(string(data), "connId") {
+				if strings.Contains(string(data), "success") {
 					result := WsActionResult{}
 					err := json.Unmarshal(data, &result)
 					if err != nil {
@@ -503,7 +724,16 @@ func (ws *WsStreamClient) handleResult(resultChan chan []byte, errChan chan erro
 					ws.sendSubscribeResultToChan(result)
 					continue
 				}
-
+				if strings.Contains(string(data), "op\":\"auth") {
+					result := WsAuthResult{}
+					err := json.Unmarshal(data, &result)
+					if err != nil {
+						log.Error(err)
+						continue
+					}
+					ws.sendAuthResultToChan(result)
+					continue
+				}
 				//处理正常数据的返回结果
 				//K线处理
 				if strings.Contains(string(data), "topic\":\"kline") {
@@ -609,13 +839,51 @@ func (ws *WsStreamClient) handleResult(resultChan chan []byte, errChan chan erro
 					}
 					continue
 				}
+
+				//ws下单结果处理
+				if strings.Contains(string(data), "op\":\"order.create") {
+					c, err := handleWsDoOrderResult[OrderCreateRes](data)
+
+					if ws.waitOrderCreateResult != nil {
+						if err != nil {
+							ws.waitOrderCreateResult.errChan <- err
+							continue
+						}
+						ws.waitOrderCreateResult.resultChan <- *c
+					}
+					continue
+				}
+
+				//ws撤单结果处理
+				if strings.Contains(string(data), "op\":\"order.cancel") {
+					c, err := handleWsDoOrderResult[OrderCancelRes](data)
+
+					if ws.waitOrderCancelResult != nil {
+						if err != nil {
+							ws.waitOrderCancelResult.errChan <- err
+							continue
+						}
+						ws.waitOrderCancelResult.resultChan <- *c
+					}
+					continue
+				}
+
+				//ws改单结果处理
+				if strings.Contains(string(data), "op\":\"order.amend") {
+					c, err := handleWsDoOrderResult[OrderAmendRes](data)
+
+					if ws.waitOrderAmendResult != nil {
+						if err != nil {
+							ws.waitOrderAmendResult.errChan <- err
+							continue
+						}
+						ws.waitOrderAmendResult.resultChan <- *c
+					}
+					continue
+				}
 			}
 		}
 	}()
-}
-
-func (ws *WsStreamClient) DeferSub(sub *Subscription[WsActionResult]) {
-	ws.waitSubResultMap.Delete(strconv.FormatInt(sub.SubId, 10))
 }
 
 // 取消订阅
@@ -640,9 +908,11 @@ func (sub *Subscription[T]) Unsubscribe() error {
 	return nil
 }
 
-// 捕获订阅结果
-func (ws *WsStreamClient) CatchAuthResult(sub *Subscription[WsActionResult]) error {
-	defer sub.Ws.DeferSub(sub)
+// 捕获鉴权结果
+func (ws *WsStreamClient) CatchPrivateAuthResult(sub *Subscription[WsActionResult]) error {
+	defer func() {
+		ws.waitAuthResult = nil
+	}()
 
 	select {
 	case err := <-sub.ErrChan():
@@ -656,12 +926,39 @@ func (ws *WsStreamClient) CatchAuthResult(sub *Subscription[WsActionResult]) err
 		}
 		log.Debug("catchAuthResults: ", authResult)
 		return nil
+	case <-sub.CloseChan():
+		return fmt.Errorf("Auth CloseChan")
+	}
+}
+
+// 捕获鉴权结果
+func (ws *WsStreamClient) CatchTradeAuthResult(sub *Subscription[WsAuthResult]) error {
+	defer func() {
+		ws.waitAuthResult = nil
+	}()
+
+	select {
+	case err := <-sub.ErrChan():
+		// log.Error(err)
+		return fmt.Errorf("auth error: %v", err)
+	case authResult := <-sub.ResultChan():
+		if authResult.RetCode != 0 {
+			err := fmt.Errorf("%s:%s:%s", authResult.RetCode, authResult.RetMsg, authResult.Op)
+			log.Error(err)
+			return err
+		}
+		log.Debug("catchAuthResults: ", authResult)
+		return nil
+	case <-sub.CloseChan():
+		return fmt.Errorf("Auth CloseChan")
 	}
 }
 
 // 捕获订阅结果
 func (ws *WsStreamClient) catchSubscribeResult(sub *Subscription[WsActionResult]) error {
-	defer sub.Ws.DeferSub(sub)
+	defer func() {
+		ws.waitSubResultMap.Delete(strconv.FormatInt(sub.SubId, 10))
+	}()
 
 	select {
 	case err := <-sub.ErrChan():
@@ -677,15 +974,55 @@ func (ws *WsStreamClient) catchSubscribeResult(sub *Subscription[WsActionResult]
 		for _, arg := range sub.Args {
 			sub.subResultMap[arg] = true
 		}
-
+	case <-sub.CloseChan():
+		return fmt.Errorf("SubAction CloseChan")
 	}
 
 	log.Debug(sub.Op, " success: ", sub.Args)
 	return nil
 }
 
-// bybit websocket登陆功能
+// 捕获下单/撤单/查单结果
+func CatchDoOrderResult[T OrderReqType, R OrderResType](ws *WsStreamClient, send *WsOrderParamSend[T, R]) (*WsOrderResult[R], error) {
+	defer func() {
+		switch send.Op {
+		case ORDER_CREATE:
+			ws.waitOrderCreateResult = nil
+		case ORDER_CANCEL:
+			ws.waitOrderCancelResult = nil
+		case ORDER_AMEND:
+			ws.waitOrderAmendResult = nil
+		}
+	}()
+
+	select {
+	case err := <-send.ErrChan():
+		return nil, fmt.Errorf("%s error: %v", send.Op, err)
+	case orderCreateResult := <-send.ResultChan():
+		if orderCreateResult.RetCode != 0 {
+			err := fmt.Errorf("%s:%s:%s", orderCreateResult.ReqId, orderCreateResult.RetMsg, orderCreateResult.Op)
+			log.Error(err)
+			return nil, err
+		}
+		log.Debugf("catch %s Results:%+v ", send.Op, orderCreateResult)
+		return &orderCreateResult, nil
+	case <-send.CloseChan():
+		return nil, fmt.Errorf("DoOrder CloseChan")
+	}
+}
+
 func (ws *WsStreamClient) Auth(client *RestClient) error {
+	if ws.apiType == WS_PRIVATE {
+		return ws.authPrivateDo(client)
+	} else if ws.apiType == WS_TRADE {
+		return ws.authTradeDo(client)
+	} else {
+		return fmt.Errorf("apiType is error")
+	}
+}
+
+// bybit websocket登陆功能
+func (ws *WsStreamClient) authPrivateDo(client *RestClient) error {
 	ws.client = client
 
 	expire := time.Now().UnixNano()/1e6 + 10000
@@ -698,12 +1035,45 @@ func (ws *WsStreamClient) Auth(client *RestClient) error {
 		Expire:    expire,
 		Signature: signature,
 	}
-	authSub, err := ws.auth(AUTH, authArg)
+
+	authSub, err := ws.authPrivate(AUTH, authArg)
 	if err != nil {
 		return err
 	}
 
-	err = ws.CatchAuthResult(authSub)
+	err = ws.CatchPrivateAuthResult(authSub)
+	if err != nil {
+		return err
+	}
+	log.Infof("Auth Success args:%v ", ws.lastAuth.Args)
+	return nil
+}
+
+// bybit websocket登陆功能
+func (ws *WsStreamClient) authTradeDo(client *RestClient) error {
+	ws.client = client
+	if ws.waitAuthResultMu.TryLock() {
+		defer ws.waitAuthResultMu.Unlock()
+	} else {
+		return fmt.Errorf("websocket is authing")
+	}
+	expire := time.Now().UnixNano()/1e6 + 10000
+	val := fmt.Sprintf("GET/realtime%d", expire)
+	mac := hmac.New(sha256.New, []byte(client.c.SecretKey))
+	mac.Write([]byte(val))
+	signature := hex.EncodeToString(mac.Sum(nil))
+	authArg := WsAuthArg{
+		ApiKey:    client.c.APIKey,
+		Expire:    expire,
+		Signature: signature,
+	}
+
+	authSub, err := ws.authTrade(AUTH, authArg)
+	if err != nil {
+		return err
+	}
+
+	err = ws.CatchTradeAuthResult(authSub)
 	if err != nil {
 		return err
 	}
@@ -769,6 +1139,8 @@ func getWsApi(apiType APIType) string {
 		return BYBIT_API_WS_PUBLIC_OPTION
 	case WS_PRIVATE:
 		return BYBIT_API_WS_PRIVATE
+	case WS_TRADE:
+		return BYBIT_API_WS_TRADE
 	default:
 		log.Error("apiType Error is ", apiType)
 		return ""
@@ -794,7 +1166,7 @@ func keepAlive(c *websocket.Conn, timeout time.Duration) {
 				return
 			}
 			<-ticker.C
-			if time.Since(lastResponse) > timeout {
+			if time.Since(lastResponse) > timeout*10 {
 				err := c.Close()
 				if err != nil {
 					log.Error(err)

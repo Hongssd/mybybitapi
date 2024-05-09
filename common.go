@@ -87,7 +87,12 @@ func RequestWithHeader(url string, reqBody []byte, method string, headerMap map[
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Error(err)
+		}
+	}(resp.Body)
 
 	body := resp.Body
 	if resp.Header.Get("Content-Encoding") == "gzip" {
@@ -135,6 +140,7 @@ const (
 	WS_PUBLIC_INVERSE
 	WS_PUBLIC_OPTION
 	WS_PRIVATE
+	WS_TRADE
 )
 
 // spot 現貨
