@@ -19,12 +19,16 @@ type BybitRestRes[T any] struct {
 	Result        T           `json:"result"` //请求结果
 }
 
-func handlerCommonRest[T any](data []byte) (*BybitRestRes[T], error) {
+func handlerCommonRest[T any](data []byte, code int) (*BybitRestRes[T], error) {
 	res := &BybitRestRes[T]{}
-	//log.Warn(string(data))
+
+	if code == 401 {
+		return nil, fmt.Errorf("response 401 code, check your api key and api secret")
+	}
 	err := json.Unmarshal(data, &res)
 	if err != nil {
-		log.Error("rest返回值获取失败", err)
+		log.Errorf("rest err data: %s", string(data))
+		return nil, err
 	}
 	return res, err
 }

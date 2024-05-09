@@ -57,14 +57,14 @@ func HmacSha256(secret, data string) []byte {
 }
 
 // Request 发送请求
-func Request(url string, reqBody []byte, method string, isGzip bool) ([]byte, error) {
+func Request(url string, reqBody []byte, method string, isGzip bool) ([]byte, int, error) {
 	return RequestWithHeader(url, reqBody, method, map[string]string{}, isGzip)
 }
 
-func RequestWithHeader(url string, reqBody []byte, method string, headerMap map[string]string, isGzip bool) ([]byte, error) {
+func RequestWithHeader(url string, reqBody []byte, method string, headerMap map[string]string, isGzip bool) ([]byte, int, error) {
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
-		return nil, err
+		return nil, 500, err
 	}
 	for k, v := range headerMap {
 		req.Header.Set(k, v)
@@ -85,7 +85,7 @@ func RequestWithHeader(url string, reqBody []byte, method string, headerMap map[
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, 500, err
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -99,12 +99,12 @@ func RequestWithHeader(url string, reqBody []byte, method string, headerMap map[
 		body, err = gzip.NewReader(resp.Body)
 		if err != nil {
 			log.Error(err)
-			return nil, err
+			return nil, resp.StatusCode, err
 		}
 	}
+
 	data, err := io.ReadAll(body)
-	// log.Debug(string(data))
-	return data, err
+	return data, resp.StatusCode, err
 }
 
 const (
@@ -238,11 +238,11 @@ func (c *RestClient) PrivateRestClient() *PrivateRestClient {
 
 // 通用接口调用
 func bybitCallAPI[T any](client *Client, url url.URL, reqBody []byte, method string) (*BybitRestRes[T], error) {
-	body, err := Request(url.String(), reqBody, method, IS_GZIP)
+	body, code, err := Request(url.String(), reqBody, method, IS_GZIP)
 	if err != nil {
 		return nil, err
 	}
-	res, err := handlerCommonRest[T](body)
+	res, err := handlerCommonRest[T](body, code)
 	if err != nil {
 		return nil, err
 	}
@@ -275,7 +275,7 @@ func bybitCallAPIWithSecret[T any](client *Client, url url.URL, reqBody []byte, 
 	//log.Warn("bybit hmacSha256Data: ", hmacSha256Data)
 	//log.Warn("bybit sign: ", sign)
 
-	body, err := RequestWithHeader(url.String(), reqBody, method,
+	body, code, err := RequestWithHeader(url.String(), reqBody, method,
 		map[string]string{
 			"X-BAPI-API-KEY":     client.APIKey,
 			"X-BAPI-SIGN":        sign,
@@ -286,7 +286,7 @@ func bybitCallAPIWithSecret[T any](client *Client, url url.URL, reqBody []byte, 
 	if err != nil {
 		return nil, err
 	}
-	res, err := handlerCommonRest[T](body)
+	res, err := handlerCommonRest[T](body, code)
 	if err != nil {
 		return nil, err
 	}
