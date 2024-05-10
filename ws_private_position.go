@@ -24,7 +24,23 @@ func (ws *PrivateWsStreamClient) SubscribePositionMultiple(categories []string) 
 		args = append(args, getPositionSubscribeArg(c))
 	}
 
-	doSub, err := ws.subscribe(SUBSCRIBE, args)
+	id, err := generateReqId()
+	if err != nil {
+		return nil, err
+	}
+	sub := &Subscription[WsPosition]{
+		SubId:      id,
+		Op:         SUBSCRIBE,
+		Args:       args,
+		resultChan: make(chan WsPosition, 50),
+		errChan:    make(chan error),
+		closeChan:  make(chan struct{}),
+		Ws:         &ws.WsStreamClient,
+	}
+	for _, arg := range args {
+		ws.positionSubMap.Store(arg, sub)
+	}
+	doSub, err := ws.subscribe(id, SUBSCRIBE, args)
 	if err != nil {
 		return nil, err
 	}
@@ -33,17 +49,8 @@ func (ws *PrivateWsStreamClient) SubscribePositionMultiple(categories []string) 
 		return nil, err
 	}
 	log.Infof("SubscribePosition Success: args:%v", doSub.Args)
-	sub := &Subscription[WsPosition]{
-		SubId:      doSub.SubId,
-		Op:         SUBSCRIBE,
-		Args:       doSub.Args,
-		resultChan: make(chan WsPosition, 50),
-		errChan:    make(chan error),
-		closeChan:  make(chan struct{}),
-		Ws:         &ws.WsStreamClient,
-	}
+
 	for _, arg := range args {
-		ws.positionSubMap.Store(arg, sub)
 		ws.commonSubMap.Store(arg, doSub)
 	}
 	return sub, nil
@@ -61,7 +68,11 @@ func (ws *PrivateWsStreamClient) UnSubscribePositionMultiple(categories []string
 		arg := getPositionSubscribeArg(c)
 		args = append(args, arg)
 	}
-	doSub, err := ws.subscribe(UNSUBSCRIBE, args)
+	id, err := generateReqId()
+	if err != nil {
+		return err
+	}
+	doSub, err := ws.subscribe(id, UNSUBSCRIBE, args)
 	if err != nil {
 		return err
 	}

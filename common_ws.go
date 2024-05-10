@@ -285,16 +285,10 @@ func (ws *WsStreamClient) authTrade(op string, arg WsAuthArg) (*Subscription[WsA
 	return resultSub, nil
 }
 
-func (ws *WsStreamClient) subscribe(op string, args []string) (*Subscription[WsActionResult], error) {
+func (ws *WsStreamClient) subscribe(id int64, op string, args []string) (*Subscription[WsActionResult], error) {
 	if ws == nil || ws.conn == nil || ws.isClose {
 		return nil, fmt.Errorf("websocket is close")
 	}
-
-	node, err := snowflake.NewNode(3)
-	if err != nil {
-		return nil, err
-	}
-	id := node.Generate().Int64()
 
 	subscribeReq := WsSubscribeReq{
 		ReqId: strconv.FormatInt(id, 10),
@@ -643,8 +637,13 @@ func (ws *WsStreamClient) reSubscribeForReconnect() error {
 		if _, ok := isDoReSubscribe[sub.SubId]; ok {
 			return true
 		}
-
-		reSub, err := ws.subscribe(sub.Op, sub.Args)
+		id, err := generateReqId()
+		if err != nil {
+			log.Error(err)
+			wErr = err
+			return false
+		}
+		reSub, err := ws.subscribe(id, sub.Op, sub.Args)
 		if err != nil {
 			log.Error(err)
 			wErr = err
@@ -888,8 +887,11 @@ func (ws *WsStreamClient) handleResult(resultChan chan []byte, errChan chan erro
 
 // 取消订阅
 func (sub *Subscription[T]) Unsubscribe() error {
-
-	unSub, err := sub.Ws.subscribe(UNSUBSCRIBE, sub.Args)
+	id, err := generateReqId()
+	if err != nil {
+		return err
+	}
+	unSub, err := sub.Ws.subscribe(id, UNSUBSCRIBE, sub.Args)
 	if err != nil {
 		return err
 	}
@@ -1176,4 +1178,13 @@ func keepAlive(c *websocket.Conn, timeout time.Duration) {
 			}
 		}
 	}()
+}
+
+func generateReqId() (int64, error) {
+	node, err := snowflake.NewNode(3)
+	if err != nil {
+		return 0, err
+	}
+	id := node.Generate().Int64()
+	return id, nil
 }

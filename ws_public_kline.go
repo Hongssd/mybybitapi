@@ -20,7 +20,23 @@ func (ws *PublicWsStreamClient) SubscribeKlineMultiple(symbols []string, interva
 			args = append(args, arg)
 		}
 	}
-	doSub, err := ws.subscribe(SUBSCRIBE, args)
+	id, err := generateReqId()
+	if err != nil {
+		return nil, err
+	}
+	sub := &Subscription[WsKline]{
+		SubId:      id,
+		Op:         SUBSCRIBE,
+		Args:       args,
+		resultChan: make(chan WsKline, 50),
+		errChan:    make(chan error),
+		closeChan:  make(chan struct{}),
+		Ws:         &ws.WsStreamClient,
+	}
+	for _, arg := range args {
+		ws.klineSubMap.Store(arg, sub)
+	}
+	doSub, err := ws.subscribe(id, SUBSCRIBE, args)
 	if err != nil {
 		return nil, err
 	}
@@ -29,17 +45,8 @@ func (ws *PublicWsStreamClient) SubscribeKlineMultiple(symbols []string, interva
 		return nil, err
 	}
 	log.Infof("SubscribeKline Success: args:%v", doSub.Args)
-	sub := &Subscription[WsKline]{
-		SubId:      doSub.SubId,
-		Op:         SUBSCRIBE,
-		Args:       doSub.Args,
-		resultChan: make(chan WsKline, 50),
-		errChan:    make(chan error),
-		closeChan:  make(chan struct{}),
-		Ws:         &ws.WsStreamClient,
-	}
+
 	for _, arg := range args {
-		ws.klineSubMap.Store(arg, sub)
 		ws.commonSubMap.Store(arg, doSub)
 	}
 	return sub, nil
@@ -59,7 +66,11 @@ func (ws *PublicWsStreamClient) UnSubscribeKlineMultiple(symbols, intervals []st
 			args = append(args, arg)
 		}
 	}
-	doSub, err := ws.subscribe(UNSUBSCRIBE, args)
+	id, err := generateReqId()
+	if err != nil {
+		return err
+	}
+	doSub, err := ws.subscribe(id, UNSUBSCRIBE, args)
 	if err != nil {
 		return err
 	}

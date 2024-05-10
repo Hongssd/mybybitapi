@@ -10,7 +10,24 @@ func getWalletSubscribeArg() string {
 func (ws *PrivateWsStreamClient) SubscribeWallet() (*Subscription[WsWallet], error) {
 	args := []string{getWalletSubscribeArg()}
 
-	doSub, err := ws.subscribe(SUBSCRIBE, args)
+	id, err := generateReqId()
+	if err != nil {
+		return nil, err
+
+	}
+	sub := &Subscription[WsWallet]{
+		SubId:      id,
+		Op:         SUBSCRIBE,
+		Args:       args,
+		resultChan: make(chan WsWallet, 50),
+		errChan:    make(chan error),
+		closeChan:  make(chan struct{}),
+		Ws:         &ws.WsStreamClient,
+	}
+	for _, arg := range args {
+		ws.walletSubMap.Store(arg, sub)
+	}
+	doSub, err := ws.subscribe(id, SUBSCRIBE, args)
 	if err != nil {
 		return nil, err
 	}
@@ -19,17 +36,8 @@ func (ws *PrivateWsStreamClient) SubscribeWallet() (*Subscription[WsWallet], err
 		return nil, err
 	}
 	log.Infof("SubscribeWallet Success: args:%v", doSub.Args)
-	sub := &Subscription[WsWallet]{
-		SubId:      doSub.SubId,
-		Op:         SUBSCRIBE,
-		Args:       doSub.Args,
-		resultChan: make(chan WsWallet, 50),
-		errChan:    make(chan error),
-		closeChan:  make(chan struct{}),
-		Ws:         &ws.WsStreamClient,
-	}
+
 	for _, arg := range args {
-		ws.walletSubMap.Store(arg, sub)
 		ws.commonSubMap.Store(arg, doSub)
 	}
 	return sub, nil
@@ -38,8 +46,12 @@ func (ws *PrivateWsStreamClient) SubscribeWallet() (*Subscription[WsWallet], err
 // 批量取消订阅钱包推送
 func (ws *PrivateWsStreamClient) UnSubscribeWallet() error {
 	args := []string{getWalletSubscribeArg()}
+	id, err := generateReqId()
+	if err != nil {
+		return err
 
-	doSub, err := ws.subscribe(UNSUBSCRIBE, args)
+	}
+	doSub, err := ws.subscribe(id, UNSUBSCRIBE, args)
 	if err != nil {
 		return err
 	}

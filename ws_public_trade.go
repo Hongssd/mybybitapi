@@ -18,7 +18,23 @@ func (ws *PublicWsStreamClient) SubscribeTradeMultiple(symbols []string) (*Subsc
 		arg := getTradeSubscribeArg(s)
 		args = append(args, arg)
 	}
-	doSub, err := ws.subscribe(SUBSCRIBE, args)
+	id, err := generateReqId()
+	if err != nil {
+		return nil, err
+	}
+	sub := &Subscription[WsTrade]{
+		SubId:      id,
+		Op:         SUBSCRIBE,
+		Args:       args,
+		resultChan: make(chan WsTrade, 50),
+		errChan:    make(chan error),
+		closeChan:  make(chan struct{}),
+		Ws:         &ws.WsStreamClient,
+	}
+	for _, arg := range args {
+		ws.tradeSubMap.Store(arg, sub)
+	}
+	doSub, err := ws.subscribe(id, SUBSCRIBE, args)
 	if err != nil {
 		return nil, err
 	}
@@ -27,17 +43,8 @@ func (ws *PublicWsStreamClient) SubscribeTradeMultiple(symbols []string) (*Subsc
 		return nil, err
 	}
 	log.Infof("SubscribeTrade Success: args:%v", doSub.Args)
-	sub := &Subscription[WsTrade]{
-		SubId:      doSub.SubId,
-		Op:         SUBSCRIBE,
-		Args:       doSub.Args,
-		resultChan: make(chan WsTrade, 50),
-		errChan:    make(chan error),
-		closeChan:  make(chan struct{}),
-		Ws:         &ws.WsStreamClient,
-	}
+
 	for _, arg := range args {
-		ws.tradeSubMap.Store(arg, sub)
 		ws.commonSubMap.Store(arg, doSub)
 	}
 	return sub, nil
@@ -56,7 +63,11 @@ func (ws *PublicWsStreamClient) UnSubscribeTradeMultiple(symbols []string) error
 		args = append(args, arg)
 
 	}
-	doSub, err := ws.subscribe(UNSUBSCRIBE, args)
+	id, err := generateReqId()
+	if err != nil {
+		return err
+	}
+	doSub, err := ws.subscribe(id, UNSUBSCRIBE, args)
 	if err != nil {
 		return err
 	}

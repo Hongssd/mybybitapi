@@ -23,8 +23,25 @@ func (ws *PrivateWsStreamClient) SubscribeOrderMultiple(categories []string) (*S
 	for _, c := range categories {
 		args = append(args, getOrderSubscribeArg(c))
 	}
+	id, err := generateReqId()
+	if err != nil {
+		return nil, err
+	}
 
-	doSub, err := ws.subscribe(SUBSCRIBE, args)
+	sub := &Subscription[WsOrder]{
+		SubId:      id,
+		Op:         SUBSCRIBE,
+		Args:       args,
+		resultChan: make(chan WsOrder, 50),
+		errChan:    make(chan error),
+		closeChan:  make(chan struct{}),
+		Ws:         &ws.WsStreamClient,
+	}
+	for _, arg := range args {
+		ws.orderSubMap.Store(arg, sub)
+	}
+
+	doSub, err := ws.subscribe(id, SUBSCRIBE, args)
 	if err != nil {
 		return nil, err
 	}
@@ -33,17 +50,8 @@ func (ws *PrivateWsStreamClient) SubscribeOrderMultiple(categories []string) (*S
 		return nil, err
 	}
 	log.Infof("SubscribeOrder Success: args:%v", doSub.Args)
-	sub := &Subscription[WsOrder]{
-		SubId:      doSub.SubId,
-		Op:         SUBSCRIBE,
-		Args:       doSub.Args,
-		resultChan: make(chan WsOrder, 50),
-		errChan:    make(chan error),
-		closeChan:  make(chan struct{}),
-		Ws:         &ws.WsStreamClient,
-	}
+
 	for _, arg := range args {
-		ws.orderSubMap.Store(arg, sub)
 		ws.commonSubMap.Store(arg, doSub)
 	}
 	return sub, nil
@@ -61,7 +69,11 @@ func (ws *PrivateWsStreamClient) UnSubscribeOrderMultiple(categories []string) e
 		arg := getOrderSubscribeArg(c)
 		args = append(args, arg)
 	}
-	doSub, err := ws.subscribe(UNSUBSCRIBE, args)
+	id, err := generateReqId()
+	if err != nil {
+		return err
+	}
+	doSub, err := ws.subscribe(id, UNSUBSCRIBE, args)
 	if err != nil {
 		return err
 	}
