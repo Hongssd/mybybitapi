@@ -39,11 +39,14 @@ func (ws *PublicWsStreamClient) SubscribeDepthMultiple(symbols []string, depth s
 	if err != nil {
 		return nil, err
 	}
-	err = ws.catchSubscribeResult(doSub)
-	if err != nil {
-		return nil, err
-	}
-	log.Infof("SubscribeDepth Success: args:%v", doSub.Args)
+	go func() {
+		err = ws.catchSubscribeResult(doSub)
+		if err != nil {
+			doSub.ErrChan() <- err
+		}
+		log.Infof("SubscribeDepth Success: args:%v", doSub.Args)
+
+	}()
 
 	for _, arg := range args {
 		ws.commonSubMap.Store(arg, doSub)

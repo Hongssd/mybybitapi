@@ -45,11 +45,13 @@ func (ws *PrivateWsStreamClient) SubscribeExecutionMultiple(categories []string)
 	if err != nil {
 		return nil, err
 	}
-	err = ws.catchSubscribeResult(doSub)
-	if err != nil {
-		return nil, err
-	}
-	log.Infof("SubscribeExecution Success: args:%v", doSub.Args)
+	go func() {
+		err = ws.catchSubscribeResult(doSub)
+		if err != nil {
+			doSub.ErrChan() <- err
+		}
+		log.Infof("SubscribeExecution Success: args:%v", doSub.Args)
+	}()
 
 	for _, arg := range args {
 		ws.commonSubMap.Store(arg, doSub)

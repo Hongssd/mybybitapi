@@ -38,11 +38,13 @@ func (ws *PublicWsStreamClient) SubscribeTradeMultiple(symbols []string) (*Subsc
 	if err != nil {
 		return nil, err
 	}
-	err = ws.catchSubscribeResult(doSub)
-	if err != nil {
-		return nil, err
-	}
-	log.Infof("SubscribeTrade Success: args:%v", doSub.Args)
+	go func() {
+		err = ws.catchSubscribeResult(doSub)
+		if err != nil {
+			doSub.ErrChan() <- err
+		}
+		log.Infof("SubscribeTrade Success: args:%v", doSub.Args)
+	}()
 
 	for _, arg := range args {
 		ws.commonSubMap.Store(arg, doSub)
