@@ -74,8 +74,8 @@ type MarketKlineReq struct {
 	Category *string `json:"category"` //String	false	string	產品類型. spot,linear,inverse 當category不指定時, 默認是linear
 	Symbol   *string `json:"symbol"`   //String	true	string	合約名稱
 	Interval *string `json:"interval"` //String	true	string	時間粒度. 1,3,5,15,30,60,120,240,360,720,D,M,W
-	Start    *int    `json:"start"`    //String	false	integer	開始時間戳 (毫秒)
-	End      *int    `json:"end"`      //String	false	integer	結束時間戳 (毫秒)
+	Start    *int64  `json:"start"`    //String	false	integer	開始時間戳 (毫秒)
+	End      *int64  `json:"end"`      //String	false	integer	結束時間戳 (毫秒)
 	Limit    *int    `json:"limit"`    //String	false	integer	每頁數量限制. [1, 1000]. 默認: 200
 }
 
@@ -103,13 +103,13 @@ func (api *MarketKlineAPI) Interval(interval string) *MarketKlineAPI {
 }
 
 // start	false	integer	開始時間戳 (毫秒)
-func (api *MarketKlineAPI) Start(start int) *MarketKlineAPI {
+func (api *MarketKlineAPI) Start(start int64) *MarketKlineAPI {
 	api.req.Start = &start
 	return api
 }
 
 // end	false	integer	結束時間戳 (毫秒)
-func (api *MarketKlineAPI) End(end int) *MarketKlineAPI {
+func (api *MarketKlineAPI) End(end int64) *MarketKlineAPI {
 	api.req.End = &end
 	return api
 }
