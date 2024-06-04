@@ -633,8 +633,8 @@ type OrderHistoryReq struct {
 	OrderLinkId *string `json:"orderLinkId"` //string	false	用戶自定義訂單ID
 	OrderFilter *string `json:"orderFilter"` //string	false	Order: 普通單, StopOrder: 條件單, 支持現貨和期貨, tpslOrder: 現貨止盈止損單, OcoOrder: OCO訂單, BidirectionalTpslOrder: 現貨(UTA)雙向止盈止損訂單
 	OrderStatus *string `json:"orderStatus"` //string	false	訂單狀態 經典帳戶spot: 該字段無效 UTA(spot, linear, option): 不傳則默認查詢所有終態訂單 UTA(inverse)和經典帳戶: 不傳則默認查詢活動態+終態的訂單
-	StartTime   *int    `json:"startTime"`   //integer	false	開始時間戳 (毫秒). 經典帳戶現貨不支持使用startTime和endTime startTime 和 endTime都不傳入, 則默認返回最近7天的數據 startTime 和 endTime都傳入的話, 則確保endTime - startTime <= 7天 若只傳startTime，則查詢startTime和startTime+7天的數據 若只傳endTime，則查詢endTime-7天和endTime的數據
-	EndTime     *int    `json:"endTime"`     //integer	false	結束時間戳 (毫秒)
+	StartTime   *int64  `json:"startTime"`   //integer	false	開始時間戳 (毫秒). 經典帳戶現貨不支持使用startTime和endTime startTime 和 endTime都不傳入, 則默認返回最近7天的數據 startTime 和 endTime都傳入的話, 則確保endTime - startTime <= 7天 若只傳startTime，則查詢startTime和startTime+7天的數據 若只傳endTime，則查詢endTime-7天和endTime的數據
+	EndTime     *int64  `json:"endTime"`     //integer	false	結束時間戳 (毫秒)
 	Limit       *int    `json:"limit"`       //integer	false	每頁數量限制. [1, 50]. 默認: 20
 	Cursor      *string `json:"cursor"`      //string	false	游標，用於翻頁
 }
@@ -693,13 +693,13 @@ func (api *OrderHistoryAPI) OrderStatus(orderStatus string) *OrderHistoryAPI {
 }
 
 // startTime int false 開始時間戳 (毫秒). 經典帳戶現貨不支持使用startTime和endTime startTime 和 endTime都不傳入, 則默認返回最近7天的數據 startTime 和 endTime都傳入的話, 則確保endTime - startTime <= 7天 若只傳startTime，則查詢startTime和startTime+7天的數據 若只傳endTime，則查詢endTime-7天和endTime的數據
-func (api *OrderHistoryAPI) StartTime(startTime int) *OrderHistoryAPI {
+func (api *OrderHistoryAPI) StartTime(startTime int64) *OrderHistoryAPI {
 	api.req.StartTime = GetPointer(startTime)
 	return api
 }
 
 // endTime int false 結束時間戳 (毫秒)
-func (api *OrderHistoryAPI) EndTime(endTime int) *OrderHistoryAPI {
+func (api *OrderHistoryAPI) EndTime(endTime int64) *OrderHistoryAPI {
 	api.req.EndTime = GetPointer(endTime)
 	return api
 }
@@ -722,8 +722,8 @@ type OrderExecutionListReq struct {
 	OrderId     *string `json:"orderId"`     //string	false	訂單Id
 	OrderLinkId *string `json:"orderLinkId"` //string	false	用戶自定義訂單id. 經典帳戶不支持該字段查詢
 	BaseCoin    *string `json:"baseCoin"`    //string	false	交易幣種. 統一帳戶(反向)和經典帳戶不支持該字段查詢
-	StartTime   *int    `json:"startTime"`   //integer	false	開始時間戳 (毫秒)
-	EndTime     *int    `json:"endTime"`     //integer	false	結束時間戳 (毫秒)
+	StartTime   *int64  `json:"startTime"`   //integer	false	開始時間戳 (毫秒)
+	EndTime     *int64  `json:"endTime"`     //integer	false	結束時間戳 (毫秒)
 	ExecType    *string `json:"execType"`    //string	false	執行類型. 經典帳戶現貨交易無效
 	Limit       *int    `json:"limit"`       //integer	false	每頁數量限制. [1, 100]. 默認: 50
 	Cursor      *string `json:"cursor"`      //string	false	游標，用於翻頁
@@ -765,13 +765,13 @@ func (api *OrderExecutionListAPI) BaseCoin(baseCoin string) *OrderExecutionListA
 }
 
 // startTime int false 開始時間戳 (毫秒)
-func (api *OrderExecutionListAPI) StartTime(startTime int) *OrderExecutionListAPI {
+func (api *OrderExecutionListAPI) StartTime(startTime int64) *OrderExecutionListAPI {
 	api.req.StartTime = GetPointer(startTime)
 	return api
 }
 
 // endTime int false 結束時間戳 (毫秒)
-func (api *OrderExecutionListAPI) EndTime(endTime int) *OrderExecutionListAPI {
+func (api *OrderExecutionListAPI) EndTime(endTime int64) *OrderExecutionListAPI {
 	api.req.EndTime = GetPointer(endTime)
 	return api
 }
