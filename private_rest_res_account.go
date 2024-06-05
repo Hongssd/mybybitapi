@@ -1,5 +1,16 @@
 package mybybitapi
 
+type AccountInfoRes struct {
+	MarginMode          string `json:"marginMode"`
+	UpdatedTime         string `json:"updatedTime"`
+	UnifiedMarginStatus int    `json:"unifiedMarginStatus"`
+	DcpStatus           string `json:"dcpStatus"`
+	TimeWindow          int    `json:"timeWindow"`
+	SmpGroup            int    `json:"smpGroup"`
+	IsMasterTrader      bool   `json:"isMasterTrader"`
+	SpotHedgingStatus   string `json:"spotHedgingStatus"`
+}
+
 type AccountWalletBalanceRes struct {
 	List []AccountWalletBalanceResRow `json:"list"`
 }
@@ -51,4 +62,11 @@ type AccountFeeRateResRow struct {
 	BaseCoin     string `json:"baseCoin"`     //交易幣種. SOL, BTC, ETH 期貨不返回該字段 現貨總是返回""
 	TakerFeeRate string `json:"takerFeeRate"` //吃單手續費率
 	MakerFeeRate string `json:"makerFeeRate"` //掛單手續費率
+}
+
+type AccountUpgradeToUtaRes struct {
+	UnifiedUpdateStatus string `json:"unifiedUpdateStatus"`
+	UnifiedUpdateMsg    struct {
+		Msg []string `json:"msg"`
+	} `json:"unifiedUpdateMsg"`
 }

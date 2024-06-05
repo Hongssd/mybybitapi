@@ -25,6 +25,10 @@ func handlerCommonRest[T any](data []byte, code int) (*BybitRestRes[T], error) {
 	if code == 401 {
 		return nil, fmt.Errorf("response 401 code, check your api key and api secret")
 	}
+
+	if code != 200 {
+		return nil, fmt.Errorf("http response code:%v", code)
+	}
 	err := json.Unmarshal(data, &res)
 	if err != nil {
 		log.Errorf("rest err data: %s", string(data))

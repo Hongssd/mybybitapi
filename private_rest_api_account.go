@@ -1,5 +1,17 @@
 package mybybitapi
 
+// bybit AccountInfo PrivateRest接口 GET 查詢帳戶信息
+func (client *PrivateRestClient) NewAccountInfo() *AccountInfoAPI {
+	return &AccountInfoAPI{
+		client: client,
+		req:    &AccountInfoReq{},
+	}
+}
+func (api *AccountInfoAPI) Do() (*BybitRestRes[AccountInfoRes], error) {
+	url := bybitHandlerRequestAPIWithPathQueryParam(REST, api.req, PrivateRestAPIMap[AccountInfo])
+	return bybitCallAPIWithSecret[AccountInfoRes](api.client.c, url, NIL_REQBODY, GET)
+}
+
 // bybit AccountWalletBalance PrivateRest接口 GET 查詢錢包餘額
 func (client *PrivateRestClient) NewAccountWalletBalance() *AccountWalletBalanceAPI {
 	return &AccountWalletBalanceAPI{
@@ -22,4 +34,20 @@ func (client *PrivateRestClient) NewAccountFeeRate() *AccountFeeRateAPI {
 func (api *AccountFeeRateAPI) Do() (*BybitRestRes[AccountFeeRateRes], error) {
 	url := bybitHandlerRequestAPIWithPathQueryParam(REST, api.req, PrivateRestAPIMap[AccountFeeRate])
 	return bybitCallAPIWithSecret[AccountFeeRateRes](api.client.c, url, NIL_REQBODY, GET)
+}
+
+// bybit AccountUpgradeToUta PrivateRest接口 POST 升級為UTA帳戶
+func (client *PrivateRestClient) NewAccountUpgradeToUta() *AccountUpgradeToUtaAPI {
+	return &AccountUpgradeToUtaAPI{
+		client: client,
+		req:    &AccountUpgradeToUtaReq{},
+	}
+}
+func (api *AccountUpgradeToUtaAPI) Do() (*BybitRestRes[AccountUpgradeToUtaRes], error) {
+	url := bybitHandlerRequestAPIWithoutPathQueryParam(REST, PrivateRestAPIMap[AccountUpgradeToUta])
+	reqBody, err := json.Marshal(api.req)
+	if err != nil {
+		return nil, err
+	}
+	return bybitCallAPIWithSecret[AccountUpgradeToUtaRes](api.client.c, url, reqBody, POST)
 }

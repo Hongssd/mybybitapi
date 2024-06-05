@@ -1,5 +1,13 @@
 package mybybitapi
 
+type AccountInfoReq struct {
+}
+
+type AccountInfoAPI struct {
+	client *PrivateRestClient
+	req    *AccountInfoReq
+}
+
 type AccountWalletBalanceReq struct {
 	AccountType *string `json:"accountType"` //string	true	帳戶類型. 統一帳戶: UNIFIED(現貨/USDT和USDC永續/期權), CONTRACT(反向) 經典帳戶: CONTRACT(期貨), SPOT(現貨)
 	Coin        *string `json:"coin"`        //string	false	幣種名稱 不傳則返回非零資產信息 可以傳多個幣進行查詢，以逗號分隔, USDT,USDC
@@ -49,4 +57,12 @@ func (api *AccountFeeRateAPI) Symbol(symbol string) *AccountFeeRateAPI {
 func (api *AccountFeeRateAPI) BaseCoin(baseCoin string) *AccountFeeRateAPI {
 	api.req.BaseCoin = GetPointer(baseCoin)
 	return api
+}
+
+type AccountUpgradeToUtaReq struct {
+}
+
+type AccountUpgradeToUtaAPI struct {
+	client *PrivateRestClient
+	req    *AccountUpgradeToUtaReq
 }
