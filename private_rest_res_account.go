@@ -70,3 +70,10 @@ type AccountUpgradeToUtaRes struct {
 		Msg []string `json:"msg"`
 	} `json:"unifiedUpdateMsg"`
 }
+
+type AccountSetMarginModeRes struct {
+	Reasons []struct {
+		ReasonCode string `json:"reasonCode"`
+		ReasonMsg  string `json:"reasonMsg"`
+	} `json:"reasons"`
+}

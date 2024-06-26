@@ -51,3 +51,19 @@ func (api *AccountUpgradeToUtaAPI) Do() (*BybitRestRes[AccountUpgradeToUtaRes], 
 	}
 	return bybitCallAPIWithSecret[AccountUpgradeToUtaRes](api.client.c, url, reqBody, POST)
 }
+
+// bybit AccountSetMarginMode PrivateRest接口 POST 設置保證金模式(帳戶)
+func (client *PrivateRestClient) NewAccountSetMarginMode() *AccountSetMarginModeAPI {
+	return &AccountSetMarginModeAPI{
+		client: client,
+		req:    &AccountSetMarginModeReq{},
+	}
+}
+func (api *AccountSetMarginModeAPI) Do() (*BybitRestRes[AccountSetMarginModeRes], error) {
+	url := bybitHandlerRequestAPIWithoutPathQueryParam(REST, PrivateRestAPIMap[AccountSetMarginMode])
+	reqBody, err := json.Marshal(api.req)
+	if err != nil {
+		return nil, err
+	}
+	return bybitCallAPIWithSecret[AccountSetMarginModeRes](api.client.c, url, reqBody, POST)
+}

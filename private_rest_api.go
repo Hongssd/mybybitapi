@@ -8,6 +8,7 @@ const (
 	AccountWalletBalance                       //查詢錢包餘額
 	AccountFeeRate                             //查詢手續費率
 	AccountUpgradeToUta                        //升級至UTA Pro
+	AccountSetMarginMode                       //設置保證金模式(帳戶)
 
 	//Position
 	PositionList           //查詢持倉 (實時)
@@ -28,10 +29,11 @@ const (
 )
 
 var PrivateRestAPIMap = map[PrivateRestAPI]string{
-	AccountInfo:          "/v5/account/info",           // GET 查詢帳戶信息
-	AccountWalletBalance: "/v5/account/wallet-balance", //GET 查詢錢包餘額
-	AccountFeeRate:       "/v5/account/fee-rate",       //GET 查詢手續費率
-	AccountUpgradeToUta:  "/v5/account/upgrade-to-uta", //POST 升級至UTA Pro
+	AccountInfo:          "/v5/account/info",            // GET 查詢帳戶信息
+	AccountWalletBalance: "/v5/account/wallet-balance",  //GET 查詢錢包餘額
+	AccountFeeRate:       "/v5/account/fee-rate",        //GET 查詢手續費率
+	AccountUpgradeToUta:  "/v5/account/upgrade-to-uta",  //POST 升級至UTA Pro
+	AccountSetMarginMode: "/v5/account/set-margin-mode", //POST 設置保證金模式(帳戶)
 
 	PositionList:           "/v5/position/list",            //GET 查詢持倉 (實時)
 	PositionSetLeverage:    "/v5/position/set-leverage",    //POST 設置槓桿

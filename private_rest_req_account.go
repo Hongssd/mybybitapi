@@ -66,3 +66,19 @@ type AccountUpgradeToUtaAPI struct {
 	client *PrivateRestClient
 	req    *AccountUpgradeToUtaReq
 }
+
+// setMarginMode	true	string	ISOLATED_MARGIN(逐倉保證金模式), REGULAR_MARGIN（全倉保證金模式）PORTFOLIO_MARGIN（組合保證金模式）默認常規，傳常規則返回設置成功
+type AccountSetMarginModeReq struct {
+	SetMarginMode *string `json:"setMarginMode"` //true	ISOLATED_MARGIN(逐倉保證金模式), REGULAR_MARGIN（全倉保證金模式）PORTFOLIO_MARGIN（組合保證金模式）默認常規，傳常規則返回設置成功
+}
+
+type AccountSetMarginModeAPI struct {
+	client *PrivateRestClient
+	req    *AccountSetMarginModeReq
+}
+
+// setMarginMode true string ISOLATED_MARGIN(逐倉保證金模式), REGULAR_MARGIN（全倉保證金模式）PORTFOLIO_MARGIN（組合保證金模式）默認常規，傳常規則返回設置成功
+func (api *AccountSetMarginModeAPI) SetMarginMode(setMarginMode string) *AccountSetMarginModeAPI {
+	api.req.SetMarginMode = GetPointer(setMarginMode)
+	return api
+}
