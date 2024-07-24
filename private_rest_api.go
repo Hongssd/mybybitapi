@@ -26,6 +26,14 @@ const (
 	OrderRealtime      //查詢實時委託單
 	OrderHistory       //查詢歷史訂單 (2年)
 	OrderExecutionList //查詢成交紀錄 (2年)
+	//asset
+	AssetTransferQueryInterTransferList   //查詢劃轉紀錄 (單帳號內)
+	AssetTransferQueryTransferCoinList    //帳戶類型間可劃轉的幣種
+	AssetTransferInterTransfer            //劃轉 (單帳號內)
+	AssetTransferQueryAccountCoinsBalance //查詢賬戶所有幣種余額
+	AssetTransferQueryAccountCoinBalance  //查詢帳戶單個幣種餘額
+	AssetTithdrawWithdrawableAmount       //查詢延遲提幣凍結金額
+
 )
 
 var PrivateRestAPIMap = map[PrivateRestAPI]string{
@@ -50,4 +58,11 @@ var PrivateRestAPIMap = map[PrivateRestAPI]string{
 	OrderRealtime:      "/v5/order/realtime",     //GET 查詢實時委託單
 	OrderHistory:       "/v5/order/history",      //GET 查詢歷史訂單 (2年)
 	OrderExecutionList: "/v5/execution/list",     //GET 查詢成交紀錄 (2年)
+
+	AssetTransferQueryInterTransferList:   "/v5/asset/transfer/query-inter-transfer-list",   //GET 查詢劃轉紀錄 (單帳號內)
+	AssetTransferQueryTransferCoinList:    "/v5/asset/transfer/query-transfer-coin-list",    //GET 帳戶類型間可劃轉的幣種
+	AssetTransferInterTransfer:            "/v5/asset/transfer/inter-transfer",              //POST 劃轉 (單帳號內)
+	AssetTransferQueryAccountCoinsBalance: "/v5/asset/transfer/query-account-coins-balance", //GET 查詢賬戶所有幣種餘額
+	AssetTransferQueryAccountCoinBalance:  "/v5/asset/transfer/query-account-coin-balance",  //GET 查詢帳戶單個幣種餘額
+	AssetTithdrawWithdrawableAmount:       "/v5/asset/withdraw/withdrawable-amount",         //GET 查詢延遲提幣凍結金額
 }
