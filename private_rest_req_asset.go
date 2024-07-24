@@ -1,5 +1,6 @@
 package mybybitapi
 
+// AssetTransferQueryInterTransferList:   PrivateRest接口   //GET 查詢劃轉紀錄 (單帳號內)
 type AssetTransferQueryInterTransferListReq struct {
 	TransferId *string `json:"transferId,omitempty"` //String	false	string	UUID. 使用創建劃轉時用的UUID
 	Coin       *string `json:"coin,omitempty"`       //String	false	string	幣種
@@ -50,6 +51,7 @@ func (api *AssetTransferQueryInterTransferListAPI) Cursor(cursor string) *AssetT
 	return api
 }
 
+// AssetTransferQueryTransferCoinList:      PrivateRest接口   //GET 帳戶類型間可劃轉的幣種
 type AssetTransferQueryTransferCoinListReq struct {
 	FromAccountType *string `json:"fromAccountType"` //String	true	string	劃出帳戶類型
 	ToAccountType   *string `json:"toAccountType"`   //String	true	string	劃入帳戶類型
@@ -70,7 +72,7 @@ func (api *AssetTransferQueryTransferCoinListAPI) ToAccountType(toAccountType st
 	return api
 }
 
-// AssetTransferInterTransfer:          "/v5/asset/transfer/inter-transfer",            //POST 劃轉 (單帳號內)
+// AssetTransferInterTransfer:                  PrivateRest接口  //POST 劃轉 (單帳號內)
 type AssetTransferInterTransferReq struct {
 	TransferId      *string `json:"transferId"`      //String	true	string	UUID. 請自行手動生成UUID
 	Coin            *string `json:"coin"`            //String	true	string	幣種
@@ -109,15 +111,7 @@ func (api *AssetTransferInterTransferAPI) ToAccountType(toAccountType string) *A
 	return api
 }
 
-// AssetTransferQueryAccountCoinsBalance: "/v5/asset/transfer/query-account-coins-balance", //GET 查詢賬戶所有幣種餘額
-// AssetTransferQueryAccountCoinBalance:  "/v5/asset/transfer/query-account-coin-balance",  //GET 查詢帳戶單個幣種餘額
-// AssetTithdrawWithdrawableAmount:       "/v5/asset/withdraw/withdrawable-amount",         //GET 查詢延遲提幣凍結金額
-
-// memberId	false	string	用戶ID. 當使用母帳號api key查詢子帳戶的幣種餘額時，該字段必傳
-// accountType	true	string	賬戶類型
-// coin	false	string	幣種類型
-// withBonus	false	integer	是否查詢體驗金. 0(默認)：不查詢; 1：查詢
-
+// AssetTransferQueryAccountCoinsBalance:  PrivateRest接口    //GET 查詢賬戶所有幣種餘額
 type AssetTransferQueryAccountCoinsBalanceReq struct {
 	MemberId    *string `json:"memberId"`    //String	false	string	用戶ID. 當使用母帳號api key查詢子帳戶的幣種餘額時，該字段必傳
 	AccountType *string `json:"accountType"` //String	true	string	賬戶類型
@@ -150,14 +144,7 @@ func (api *AssetTransferQueryAccountCoinsBalanceAPI) WithBonus(withBonus int) *A
 	return api
 }
 
-// memberId	false	string	用戶Id. 當查詢子帳號的餘額時，該字段必傳
-// toMemberId	false	string	劃入帳戶UID. 當查詢不同uid間劃轉時, 該字段必傳
-// accountType	true	string	帳戶類型
-// toAccountType	false	string	劃入帳戶類型. 當查詢不同帳戶類型間的劃轉時, 該字段必傳
-// coin	true	string	幣種
-// withBonus	false	integer	是否查詢體驗金. 0(默認): 不查詢,1: 查詢.
-// withTransferSafeAmount	false	integer	是否查詢延遲提幣安全限額  // 0(默認)：否, 1：是// 什麼是延遲提幣?
-// withLtvTransferSafeAmount	false	integer	特別用於機構借貸用戶, 可以查詢風險水平內的可劃轉餘額0(default)：false, 1：true  此時toAccountType字段必傳
+// AssetTransferQueryAccountCoinBalance:    PrivateRest接口    //GET 查詢帳戶單個幣種餘額
 type AssetTransferQueryAccountCoinBalanceReq struct {
 	MemberId                  *string `json:"memberId"`                  //String	false	string	用戶ID. 當使用母帳號api key查詢子帳戶的幣種餘額時，該字段必傳
 	ToMemberId                *string `json:"toMemberId"`                //String	false	string	劃入帳戶UID. 當查詢不同uid間劃轉時, 該字段必傳
@@ -208,7 +195,7 @@ func (api *AssetTransferQueryAccountCoinBalanceAPI) WithLtvTransferSafeAmount(wi
 	return api
 }
 
-// coin	true	string	幣種敏誠
+// AssetTithdrawWithdrawableAmount:              PrivateRest接口  //GET 查詢延遲提幣凍結金額
 type AssetTithdrawWithdrawableAmountReq struct {
 	Coin *string `json:"coin"` //String	true	string	幣種敏誠
 }

@@ -40,6 +40,7 @@ func (api *AssetTransferInterTransferAPI) Do() (*BybitRestRes[AssetTransferInter
 	return bybitCallAPIWithSecret[AssetTransferInterTransferRes](api.client.c, url, reqBody, POST)
 }
 
+// AssetTransferQueryAccountCoinsBalance:  PrivateRest接口    //GET 查詢賬戶所有幣種餘額
 func (client *PrivateRestClient) NewAssetTransferQueryAccountCoinsBalance() *AssetTransferQueryAccountCoinsBalanceAPI {
 	return &AssetTransferQueryAccountCoinsBalanceAPI{
 		client: client,
@@ -52,6 +53,7 @@ func (api *AssetTransferQueryAccountCoinsBalanceAPI) Do() (*BybitRestRes[AssetTr
 	return bybitCallAPIWithSecret[AssetTransferQueryAccountCoinsBalanceRes](api.client.c, url, NIL_REQBODY, GET)
 }
 
+// AssetTransferQueryAccountCoinBalance:    PrivateRest接口    //GET 查詢帳戶單個幣種餘額
 func (client *PrivateRestClient) NewAssetTransferQueryAccountCoinBalance() *AssetTransferQueryAccountCoinBalanceAPI {
 	return &AssetTransferQueryAccountCoinBalanceAPI{
 		client: client,
@@ -64,6 +66,7 @@ func (api *AssetTransferQueryAccountCoinBalanceAPI) Do() (*BybitRestRes[AssetTra
 	return bybitCallAPIWithSecret[AssetTransferQueryAccountCoinBalanceRes](api.client.c, url, NIL_REQBODY, GET)
 }
 
+// AssetTithdrawWithdrawableAmount:              PrivateRest接口  //GET 查詢延遲提幣凍結金額
 func (client *PrivateRestClient) NewAssetTithdrawWithdrawableAmount() *AssetTithdrawWithdrawableAmountAPI {
 	return &AssetTithdrawWithdrawableAmountAPI{
 		client: client,
