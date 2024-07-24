@@ -21,6 +21,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// test
 const (
 	BIT_BASE_10 = 10
 	BIT_SIZE_64 = 64
