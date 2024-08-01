@@ -31,12 +31,12 @@ func (api *AssetTransferQueryInterTransferListAPI) Status(status string) *AssetT
 	return api
 }
 
-func (api *AssetTransferQueryInterTransferListAPI) StartTime(startTime int) *AssetTransferQueryInterTransferListAPI {
+func (api *AssetTransferQueryInterTransferListAPI) StartTime(startTime int64) *AssetTransferQueryInterTransferListAPI {
 	api.req.StartTime = GetPointer(startTime)
 	return api
 }
 
-func (api *AssetTransferQueryInterTransferListAPI) EndTime(endTime int) *AssetTransferQueryInterTransferListAPI {
+func (api *AssetTransferQueryInterTransferListAPI) EndTime(endTime int64) *AssetTransferQueryInterTransferListAPI {
 	api.req.EndTime = GetPointer(endTime)
 	return api
 }
