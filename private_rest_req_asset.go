@@ -5,8 +5,8 @@ type AssetTransferQueryInterTransferListReq struct {
 	TransferId *string `json:"transferId,omitempty"` //String	false	string	UUID. 使用創建劃轉時用的UUID
 	Coin       *string `json:"coin,omitempty"`       //String	false	string	幣種
 	Status     *string `json:"status,omitempty"`     //String	false	string	劃轉狀態
-	StartTime  *int    `json:"startTime,omitempty"`  //String	false	integer	開始時間戳 (毫秒) 注意: 實際查詢時是秒級維度生效	當startTime & endTime都不傳入時, API默認返回30天的數據
-	EndTime    *int    `json:"endTime,omitempty"`    //String	false	integer	結束時間戳 (毫秒) 注意: 實際查詢時是秒級維度生效
+	StartTime  *int64  `json:"startTime,omitempty"`  //String	false	integer	開始時間戳 (毫秒) 注意: 實際查詢時是秒級維度生效	當startTime & endTime都不傳入時, API默認返回30天的數據
+	EndTime    *int64  `json:"endTime,omitempty"`    //String	false	integer	結束時間戳 (毫秒) 注意: 實際查詢時是秒級維度生效
 	Limit      *int    `json:"limit,omitempty"`      //String	false	integer	每頁數量限制. [1, 50]. 默認: 20
 	Cursor     *string `json:"cursor,omitempty"`     //String	false	string	游標，用於翻頁
 }
@@ -31,12 +31,12 @@ func (api *AssetTransferQueryInterTransferListAPI) Status(status string) *AssetT
 	return api
 }
 
-func (api *AssetTransferQueryInterTransferListAPI) StartTime(startTime int) *AssetTransferQueryInterTransferListAPI {
+func (api *AssetTransferQueryInterTransferListAPI) StartTime(startTime int64) *AssetTransferQueryInterTransferListAPI {
 	api.req.StartTime = GetPointer(startTime)
 	return api
 }
 
-func (api *AssetTransferQueryInterTransferListAPI) EndTime(endTime int) *AssetTransferQueryInterTransferListAPI {
+func (api *AssetTransferQueryInterTransferListAPI) EndTime(endTime int64) *AssetTransferQueryInterTransferListAPI {
 	api.req.EndTime = GetPointer(endTime)
 	return api
 }
