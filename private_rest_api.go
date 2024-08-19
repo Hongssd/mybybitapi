@@ -34,6 +34,8 @@ const (
 	AssetTransferQueryAccountCoinBalance  //查詢帳戶單個幣種餘額
 	AssetTithdrawWithdrawableAmount       //查詢延遲提幣凍結金額
 
+	//margin
+	SpotMarginTradeSetLeverage //全倉槓桿設置用戶最大槓桿倍數
 )
 
 var PrivateRestAPIMap = map[PrivateRestAPI]string{
@@ -44,7 +46,7 @@ var PrivateRestAPIMap = map[PrivateRestAPI]string{
 	AccountSetMarginMode: "/v5/account/set-margin-mode", //POST 設置保證金模式(帳戶)
 
 	PositionList:           "/v5/position/list",            //GET 查詢持倉 (實時)
-	PositionSetLeverage:    "/v5/position/set-leverage",    //POST 設置槓桿
+	PositionSetLeverage:    "/v5/position/set-leverage",    //POST 設置槓桿（統一帳戶覆蓋範圍: USDT永續 / USDC永續 / USDC交割 / 反向合約）
 	PositionSwitchIsolated: "/v5/position/switch-isolated", //POST 切換全倉/逐倉保證金(交易對)
 	PositionSwitchMode:     "/v5/position/switch-mode",     //POST 切換持倉模式
 
@@ -65,4 +67,7 @@ var PrivateRestAPIMap = map[PrivateRestAPI]string{
 	AssetTransferQueryAccountCoinsBalance: "/v5/asset/transfer/query-account-coins-balance", //GET 查詢賬戶所有幣種餘額
 	AssetTransferQueryAccountCoinBalance:  "/v5/asset/transfer/query-account-coin-balance",  //GET 查詢帳戶單個幣種餘額
 	AssetTithdrawWithdrawableAmount:       "/v5/asset/withdraw/withdrawable-amount",         //GET 查詢延遲提幣凍結金額
+
+	// margin
+	SpotMarginTradeSetLeverage: "/v5/spot-margin-trade/set-leverage", // POST 全倉槓桿設置用戶最大槓桿倍數, 支持區間 [2, 10]
 }
