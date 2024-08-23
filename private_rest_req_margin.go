@@ -12,3 +12,9 @@ func (api *SpotMarginTradeSetLeverageAPI) Leverage(leverage string) *SpotMarginT
 	api.req.Leverage = leverage
 	return api
 }
+
+type SpotMarginTradeStateReq struct{}
+type SpotMarginTradeStateAPI struct {
+	client *PrivateRestClient
+	req    *SpotMarginTradeStateReq
+}

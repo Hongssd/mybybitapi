@@ -36,6 +36,7 @@ const (
 
 	//margin
 	SpotMarginTradeSetLeverage //全倉槓桿設置用戶最大槓桿倍數
+	SpotMarginTradeState       //查詢統一帳戶下槓桿交易的開關狀態和槓桿倍數
 )
 
 var PrivateRestAPIMap = map[PrivateRestAPI]string{
@@ -70,4 +71,5 @@ var PrivateRestAPIMap = map[PrivateRestAPI]string{
 
 	// margin
 	SpotMarginTradeSetLeverage: "/v5/spot-margin-trade/set-leverage", // POST 全倉槓桿設置用戶最大槓桿倍數, 支持區間 [2, 10]
+	SpotMarginTradeState:       "/v5/spot-margin-trade/state",        // 查詢統一帳戶下槓桿交易的開關狀態和槓桿倍數
 }

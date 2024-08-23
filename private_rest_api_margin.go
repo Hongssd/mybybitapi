@@ -14,3 +14,14 @@ func (api *SpotMarginTradeSetLeverageAPI) Do() (*BybitRestRes[SpotMarginTradeSet
 	}
 	return bybitCallAPIWithSecret[SpotMarginTradeSetLeverageRes](api.client.c, url, reqBody, POST)
 }
+
+func (client *PrivateRestClient) NewSpotMarginTradeState() *SpotMarginTradeStateAPI {
+	return &SpotMarginTradeStateAPI{
+		client: client,
+		req:    &SpotMarginTradeStateReq{},
+	}
+}
+func (api *SpotMarginTradeStateAPI) Do() (*BybitRestRes[SpotMarginTradeStateRes], error) {
+	url := bybitHandlerRequestAPIWithoutPathQueryParam(REST, PrivateRestAPIMap[SpotMarginTradeState])
+	return bybitCallAPIWithSecret[SpotMarginTradeStateRes](api.client.c, url, NIL_REQBODY, GET)
+}
