@@ -77,3 +77,11 @@ type AccountSetMarginModeRes struct {
 		ReasonMsg  string `json:"reasonMsg"`
 	} `json:"reasons"`
 }
+
+// availableWithdrawal	string	請求中第一個幣種的可劃轉餘額
+// availableWithdrawalMap	Object	每個請求幣種的可劃轉餘額的對象。在映射中，鍵是請求的幣種，值是相應的金額(字符串)
+// 例如, "availableWithdrawalMap":{"BTC":"4.54549050","SOL":"33.16713007","XRP":"10805.54548970","ETH":"17.76451865"}
+type AccountWithdrawalRes struct {
+	AvailableWithdrawal string `json:"availableWithdrawal"`
+	AvailableWithdrawalMap map[string]string `json:"availableWithdrawalMap"`
+}

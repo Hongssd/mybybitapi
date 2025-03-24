@@ -9,6 +9,7 @@ const (
 	AccountFeeRate                             //查詢手續費率
 	AccountUpgradeToUta                        //升級至UTA Pro
 	AccountSetMarginMode                       //設置保證金模式(帳戶)
+	AccountWithdrawal                          //查詢可劃轉餘額(统一账户)
 
 	//Position
 	PositionList           //查詢持倉 (實時)
@@ -45,6 +46,7 @@ var PrivateRestAPIMap = map[PrivateRestAPI]string{
 	AccountFeeRate:       "/v5/account/fee-rate",        //GET 查詢手續費率
 	AccountUpgradeToUta:  "/v5/account/upgrade-to-uta",  //POST 升級至UTA Pro
 	AccountSetMarginMode: "/v5/account/set-margin-mode", //POST 設置保證金模式(帳戶)
+	AccountWithdrawal:    "/v5/account/withdrawal",      //GET 查詢可劃轉餘額(统一账户)
 
 	PositionList:           "/v5/position/list",            //GET 查詢持倉 (實時)
 	PositionSetLeverage:    "/v5/position/set-leverage",    //POST 設置槓桿（統一帳戶覆蓋範圍: USDT永續 / USDC永續 / USDC交割 / 反向合約）
