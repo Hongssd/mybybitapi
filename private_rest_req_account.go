@@ -82,3 +82,19 @@ func (api *AccountSetMarginModeAPI) SetMarginMode(setMarginMode string) *Account
 	api.req.SetMarginMode = GetPointer(setMarginMode)
 	return api
 }
+
+type AccountWithdrawalAPI struct {
+	client *PrivateRestClient
+	req    *AccountWithdrawalReq
+}
+
+// coinName	true	string	幣種名稱, 僅大寫. 支持最多20個幣種批量查詢, 用逗號分隔. BTC,SOL,USDT,USDC
+type AccountWithdrawalReq struct {
+	CoinName *string `json:"coinName"` //string	true	幣種名稱, 僅大寫. 支持最多20個幣種批量查詢, 用逗號分隔. BTC,SOL,USDT,USDC
+}
+
+// coinName string true 幣種名稱, 僅大寫. 支持最多20個幣種批量查詢, 用逗號分隔. BTC,SOL,USDT,USDC
+func (api *AccountWithdrawalAPI) CoinName(coinName string) *AccountWithdrawalAPI {
+	api.req.CoinName = GetPointer(coinName)
+	return api
+}
