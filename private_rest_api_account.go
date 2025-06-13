@@ -67,3 +67,15 @@ func (api *AccountSetMarginModeAPI) Do() (*BybitRestRes[AccountSetMarginModeRes]
 	}
 	return bybitCallAPIWithSecret[AccountSetMarginModeRes](api.client.c, url, reqBody, POST)
 }
+
+// bybit AccountWithdrawal PrivateRest接口 GET 查詢可劃轉餘額(统一账户)
+func (client *PrivateRestClient) NewAccountWithdrawal() *AccountWithdrawalAPI {
+	return &AccountWithdrawalAPI{
+		client: client,
+		req:    &AccountWithdrawalReq{},
+	}
+}
+func (api *AccountWithdrawalAPI) Do() (*BybitRestRes[AccountWithdrawalRes], error) {
+	url := bybitHandlerRequestAPIWithPathQueryParam(REST, api.req, PrivateRestAPIMap[AccountWithdrawal])
+	return bybitCallAPIWithSecret[AccountWithdrawalRes](api.client.c, url, NIL_REQBODY, GET)
+}
