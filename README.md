@@ -4,13 +4,23 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Hongssd/mybybitapi/blob/master/LICENSE)
 
 # Table of Contents
-- [Require](#Require)
-- [Installation](#Installation)
-- [Public Rest Examples](#Public-Rest-Examples)
-- [Private Rest Examples](#Private-Rest-Examples)
-- [Public Websocket Examples](#Public-Websocket-Examples)
-- [Private Websocket Examples](#Private-Websocket-Examples)
-- [Trade Websocket Examples](#Trade-Websocket-Examples)
+- [mybybitapi](#mybybitapi)
+- [Table of Contents](#table-of-contents)
+- [Require](#require)
+- [Installation](#installation)
+- [Public Rest Examples](#public-rest-examples)
+  - [Kline](#kline)
+  - [OrderBook](#orderbook)
+- [Private Rest Examples](#private-rest-examples)
+  - [Wallet Balance](#wallet-balance)
+  - [Order Create](#order-create)
+  - [Batch Order Create](#batch-order-create)
+- [Public Websocket Examples](#public-websocket-examples)
+  - [Subscribe Kline](#subscribe-kline)
+- [Private Websocket Examples](#private-websocket-examples)
+  - [Subscribe Order](#subscribe-order)
+- [Trade Websocket Examples](#trade-websocket-examples)
+  - [Create Order](#create-order)
 # Require
 
 ```go

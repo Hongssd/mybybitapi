@@ -76,11 +76,11 @@ func RequestWithHeader(url string, reqBody []byte, method string, headerMap map[
 		req.Header.Add("Content-Encoding", "gzip")
 		req.Header.Add("Accept-Encoding", "gzip")
 	}
-	req.Body = io.NopCloser(bytes.NewBuffer(reqBody))
 
 	log.Debug("reqURL: ", req.URL.String())
-	if reqBody != nil && len(reqBody) > 0 {
+	if len(reqBody) > 0 {
 		log.Debug("reqBody: ", string(reqBody))
+		req.Body = io.NopCloser(bytes.NewBuffer(reqBody))
 	}
 
 	resp, err := client.Do(req)

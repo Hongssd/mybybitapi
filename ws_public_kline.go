@@ -46,7 +46,6 @@ func (ws *PublicWsStreamClient) SubscribeKlineMultiple(symbols []string, interva
 			doSub.ErrChan() <- err
 		}
 		log.Infof("SubscribeKline Success: args:%v", doSub.Args)
-
 	}()
 
 	for _, arg := range args {
