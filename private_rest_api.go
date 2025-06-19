@@ -4,12 +4,15 @@ type PrivateRestAPI int
 
 const (
 	//Account
-	AccountInfo          PrivateRestAPI = iota //查詢帳戶信息
-	AccountWalletBalance                       //查詢錢包餘額
-	AccountFeeRate                             //查詢手續費率
-	AccountUpgradeToUta                        //升級至UTA Pro
-	AccountSetMarginMode                       //設置保證金模式(帳戶)
-	AccountWithdrawal                          //查詢可劃轉餘額(统一账户)
+	AccountInfo                     PrivateRestAPI = iota //查詢帳戶信息
+	AccountWalletBalance                                  //查詢錢包餘額
+	AccountFeeRate                                        //查詢手續費率
+	AccountUpgradeToUta                                   //升級至UTA Pro
+	AccountSetMarginMode                                  //設置保證金模式(帳戶)
+	AccountWithdrawal                                     //查詢可劃轉餘額(统一账户)
+	AccountSetCollateralSwitch                            //設置抵押品幣種
+	AccountSetCollateralSwitchBatch                       //批量設置抵押品幣種
+	AccountCollateralInfo                                 //查詢抵押品幣種
 
 	//Position
 	PositionList           //查詢持倉 (實時)
@@ -41,12 +44,15 @@ const (
 )
 
 var PrivateRestAPIMap = map[PrivateRestAPI]string{
-	AccountInfo:          "/v5/account/info",            // GET 查詢帳戶信息
-	AccountWalletBalance: "/v5/account/wallet-balance",  //GET 查詢錢包餘額
-	AccountFeeRate:       "/v5/account/fee-rate",        //GET 查詢手續費率
-	AccountUpgradeToUta:  "/v5/account/upgrade-to-uta",  //POST 升級至UTA Pro
-	AccountSetMarginMode: "/v5/account/set-margin-mode", //POST 設置保證金模式(帳戶)
-	AccountWithdrawal:    "/v5/account/withdrawal",      //GET 查詢可劃轉餘額(统一账户)
+	AccountInfo:                     "/v5/account/info",                        // GET 查詢帳戶信息
+	AccountWalletBalance:            "/v5/account/wallet-balance",              //GET 查詢錢包餘額
+	AccountFeeRate:                  "/v5/account/fee-rate",                    //GET 查詢手續費率
+	AccountUpgradeToUta:             "/v5/account/upgrade-to-uta",              //POST 升級至UTA Pro
+	AccountSetMarginMode:            "/v5/account/set-margin-mode",             //POST 設置保證金模式(帳戶)
+	AccountWithdrawal:               "/v5/account/withdrawal",                  //GET 查詢可劃轉餘額(统一账户)
+	AccountSetCollateralSwitch:      "/v5/account/set-collateral-switch",       //POST 設置抵押品幣種
+	AccountSetCollateralSwitchBatch: "/v5/account/set-collateral-switch-batch", //POST 批量設置抵押品幣種
+	AccountCollateralInfo:           "/v5/account/collateral-info",             //GET 查詢抵押品幣種
 
 	PositionList:           "/v5/position/list",            //GET 查詢持倉 (實時)
 	PositionSetLeverage:    "/v5/position/set-leverage",    //POST 設置槓桿（統一帳戶覆蓋範圍: USDT永續 / USDC永續 / USDC交割 / 反向合約）

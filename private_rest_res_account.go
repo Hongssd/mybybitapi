@@ -82,6 +82,37 @@ type AccountSetMarginModeRes struct {
 // availableWithdrawalMap	Object	每個請求幣種的可劃轉餘額的對象。在映射中，鍵是請求的幣種，值是相應的金額(字符串)
 // 例如, "availableWithdrawalMap":{"BTC":"4.54549050","SOL":"33.16713007","XRP":"10805.54548970","ETH":"17.76451865"}
 type AccountWithdrawalRes struct {
-	AvailableWithdrawal string `json:"availableWithdrawal"`
+	AvailableWithdrawal    string            `json:"availableWithdrawal"`
 	AvailableWithdrawalMap map[string]string `json:"availableWithdrawalMap"`
+}
+
+type AccountSetCollateralSwitchRes struct{}
+
+type AccountSetCollateralSwitchBatchResRow struct {
+	Coin             string `json:"coin"`             //幣種名稱
+	CollateralSwitch string `json:"collateralSwitch"` //ON: 開啟抵押, OFF: 關閉抵押
+}
+type AccountSetCollateralSwitchBatchRes struct {
+	List []AccountSetCollateralSwitchBatchResRow `json:"list"`
+}
+
+type AccountCollateralInfoRes struct {
+	List []AccountCollateralInfoResRow `json:"list"`
+}
+
+type AccountCollateralInfoResRow struct {
+	Currency            string `json:"currency"`            //目前所有抵押品的資產幣種
+	HourlyBorrowRate    string `json:"hourlyBorrowRate"`    //每小時藉款利率
+	MaxBorrowingAmount  string `json:"maxBorrowingAmount"`  //最大可藉貸額度. 該值由母子帳號共享
+	FreeBorrowingLimit  string `json:"freeBorrowingLimit"`  //免息借款額上限
+	FreeBorrowAmount    string `json:"freeBorrowAmount"`    //借款總額中免息部分的借款金額
+	BorrowAmount        string `json:"borrowAmount"`        //已用借貸額度
+	OtherBorrowAmount   string `json:"otherBorrowAmount"`   //其他帳戶的已借貸總額(同一個母帳戶下)
+	AvailableToBorrow   string `json:"availableToBorrow"`   //用戶剩餘可藉額度. 該值由母子帳號共享
+	Borrowable          bool   `json:"borrowable"`          //是否是可藉貸的幣種, true: 是. false: 否
+	FreeBorrowingAmount string `json:"freeBorrowingAmount"` //廢棄字段, 總是返回空字符串, 請參考freeBorrowingLimit
+	BorrowUsageRate     string `json:"borrowUsageRate"`     //借貸資金使用率: 母子帳戶加起來的borrowAmount/maxBorrowingAmount. 這是一個真實值, 0.5则表示50%
+	MarginCollateral    bool   `json:"marginCollateral"`    //是否可作為保證金抵押幣種(平台維度), true: 是. false: 否
+	CollateralSwitch    bool   `json:"collateralSwitch"`    //用戶是否開啟保證金幣種抵押(用戶維度), true: 是. false: 否
+	CollateralRatio     string `json:"collateralRatio"`     //由於新的階梯價值率邏輯, 該字段從2025年2月19日開始不再準確。請使用查詢階梯價值率
 }

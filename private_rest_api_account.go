@@ -79,3 +79,47 @@ func (api *AccountWithdrawalAPI) Do() (*BybitRestRes[AccountWithdrawalRes], erro
 	url := bybitHandlerRequestAPIWithPathQueryParam(REST, api.req, PrivateRestAPIMap[AccountWithdrawal])
 	return bybitCallAPIWithSecret[AccountWithdrawalRes](api.client.c, url, NIL_REQBODY, GET)
 }
+
+// bybit AccountSetCollateralSwitch PrivateRest接口 POST 設置抵押品幣種
+func (client *PrivateRestClient) NewAccountSetCollateralSwitch() *AccountSetCollateralSwitchAPI {
+	return &AccountSetCollateralSwitchAPI{
+		client: client,
+		req:    &AccountSetCollateralSwitchReq{},
+	}
+}
+func (api *AccountSetCollateralSwitchAPI) Do() (*BybitRestRes[AccountSetCollateralSwitchRes], error) {
+	url := bybitHandlerRequestAPIWithoutPathQueryParam(REST, PrivateRestAPIMap[AccountSetCollateralSwitch])
+	reqBody, err := json.Marshal(api.req)
+	if err != nil {
+		return nil, err
+	}
+	return bybitCallAPIWithSecret[AccountSetCollateralSwitchRes](api.client.c, url, reqBody, POST)
+}
+
+// bybit AccountSetCollateralSwitchBatch PrivateRest接口 POST 批量設置抵押品幣種
+func (client *PrivateRestClient) NewAccountSetCollateralSwitchBatch() *AccountSetCollateralSwitchBatchAPI {
+	return &AccountSetCollateralSwitchBatchAPI{
+		client: client,
+		req:    &AccountSetCollateralSwitchBatchReq{},
+	}
+}
+func (api *AccountSetCollateralSwitchBatchAPI) Do() (*BybitRestRes[AccountSetCollateralSwitchBatchRes], error) {
+	url := bybitHandlerRequestAPIWithoutPathQueryParam(REST, PrivateRestAPIMap[AccountSetCollateralSwitchBatch])
+	reqBody, err := json.Marshal(api.req)
+	if err != nil {
+		return nil, err
+	}
+	return bybitCallAPIWithSecret[AccountSetCollateralSwitchBatchRes](api.client.c, url, reqBody, POST)
+}
+
+// bybit AccountCollateralInfo PrivateRest接口 GET 查詢抵押品幣種
+func (client *PrivateRestClient) NewAccountCollateralInfo() *AccountCollateralInfoAPI {
+	return &AccountCollateralInfoAPI{
+		client: client,
+		req:    &AccountCollateralInfoReq{},
+	}
+}
+func (api *AccountCollateralInfoAPI) Do() (*BybitRestRes[AccountCollateralInfoRes], error) {
+	url := bybitHandlerRequestAPIWithPathQueryParam(REST, api.req, PrivateRestAPIMap[AccountCollateralInfo])
+	return bybitCallAPIWithSecret[AccountCollateralInfoRes](api.client.c, url, NIL_REQBODY, GET)
+}
