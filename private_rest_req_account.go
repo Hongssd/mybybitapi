@@ -98,3 +98,71 @@ func (api *AccountWithdrawalAPI) CoinName(coinName string) *AccountWithdrawalAPI
 	api.req.CoinName = GetPointer(coinName)
 	return api
 }
+
+type AccountSetCollateralSwitchAPI struct {
+	client *PrivateRestClient
+	req    *AccountSetCollateralSwitchReq
+}
+
+type AccountSetCollateralSwitchReq struct {
+	Coin             *string `json:"coin"`             //string	true	幣種名稱
+	CollateralSwitch *string `json:"collateralSwitch"` //string	true	ON: 開啟抵押, OFF: 關閉抵押
+}
+
+// coin string true 幣種名稱
+func (api *AccountSetCollateralSwitchAPI) Coin(coin string) *AccountSetCollateralSwitchAPI {
+	api.req.Coin = GetPointer(coin)
+	return api
+}
+
+// collateralSwitch string true ON: 開啟抵押, OFF: 關閉抵押
+func (api *AccountSetCollateralSwitchAPI) CollateralSwitch(collateralSwitch string) *AccountSetCollateralSwitchAPI {
+	api.req.CollateralSwitch = GetPointer(collateralSwitch)
+	return api
+}
+
+type AccountSetCollateralSwitchBatchAPI struct {
+	client *PrivateRestClient
+	req    *AccountSetCollateralSwitchBatchReq
+}
+
+type AccountSetCollateralSwitchBatchReq struct {
+	Request []AccountSetCollateralSwitchReq `json:"request"`
+}
+
+func (api *AccountSetCollateralSwitchBatchAPI) AddNewSetCollateralSwitchReq(coin string, collateralSwitch string) *AccountSetCollateralSwitchBatchAPI {
+	if api.req == nil {
+		api.req = &AccountSetCollateralSwitchBatchReq{
+			Request: []AccountSetCollateralSwitchReq{},
+		}
+	}
+	api.req.Request = append(api.req.Request, AccountSetCollateralSwitchReq{
+		Coin:             GetPointer(coin),
+		CollateralSwitch: GetPointer(collateralSwitch),
+	})
+	return api
+}
+
+func (api *AccountSetCollateralSwitchBatchAPI) SetSetCollateralSwitchReqList(setCollateralSwitchReqList []AccountSetCollateralSwitchReq) *AccountSetCollateralSwitchBatchAPI {
+	if len(setCollateralSwitchReqList) == 0 {
+		return api
+	}
+	api.req.Request = setCollateralSwitchReqList
+	return api
+}
+
+type AccountCollateralInfoAPI struct {
+	client *PrivateRestClient
+	req    *AccountCollateralInfoReq
+}
+
+type AccountCollateralInfoReq struct {
+	Currency *string `json:"currency"` //string false 目前所有抵押品的資產幣種
+}
+
+// currency string false 目前所有抵押品的資產幣種
+func (api *AccountCollateralInfoAPI) Currency(currency string) *AccountCollateralInfoAPI {
+	api.req.Currency = GetPointer(currency)
+	return api
+}
+
