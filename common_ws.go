@@ -5,13 +5,14 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/bwmarrin/snowflake"
-	"github.com/gorilla/websocket"
 	"net/url"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/bwmarrin/snowflake"
+	"github.com/gorilla/websocket"
 )
 
 const (
@@ -51,9 +52,10 @@ type WsStreamClient struct {
 	waitAuthResultMu *sync.Mutex
 	waitSubResultMap MySyncMap[string, *Subscription[WsActionResult]]
 
-	klineSubMap MySyncMap[string, *Subscription[WsKline]]
-	depthSubMap MySyncMap[string, *Subscription[WsDepth]]
-	tradeSubMap MySyncMap[string, *Subscription[WsTrade]]
+	klineSubMap  MySyncMap[string, *Subscription[WsKline]]
+	depthSubMap  MySyncMap[string, *Subscription[WsDepth]]
+	tradeSubMap  MySyncMap[string, *Subscription[WsTrade]]
+	tickerSubMap MySyncMap[string, *Subscription[WsTicker]]
 
 	orderSubMap     MySyncMap[string, *Subscription[WsOrder]]
 	walletSubMap    MySyncMap[string, *Subscription[WsWallet]]
@@ -387,6 +389,7 @@ func (ws *WsStreamClient) Close() error {
 	ws.klineSubMap = NewMySyncMap[string, *Subscription[WsKline]]()
 	ws.depthSubMap = NewMySyncMap[string, *Subscription[WsDepth]]()
 	ws.tradeSubMap = NewMySyncMap[string, *Subscription[WsTrade]]()
+	ws.tickerSubMap = NewMySyncMap[string, *Subscription[WsTicker]]()
 	ws.orderSubMap = NewMySyncMap[string, *Subscription[WsOrder]]()
 	ws.walletSubMap = NewMySyncMap[string, *Subscription[WsWallet]]()
 	ws.positionSubMap = NewMySyncMap[string, *Subscription[WsPosition]]()
@@ -476,6 +479,7 @@ func newWsStreamClient(apiType APIType) WsStreamClient {
 		klineSubMap:     NewMySyncMap[string, *Subscription[WsKline]](),
 		depthSubMap:     NewMySyncMap[string, *Subscription[WsDepth]](),
 		tradeSubMap:     NewMySyncMap[string, *Subscription[WsTrade]](),
+		tickerSubMap:    NewMySyncMap[string, *Subscription[WsTicker]](),
 		orderSubMap:     NewMySyncMap[string, *Subscription[WsOrder]](),
 		walletSubMap:    NewMySyncMap[string, *Subscription[WsWallet]](),
 		positionSubMap:  NewMySyncMap[string, *Subscription[WsPosition]](),
@@ -580,6 +584,13 @@ func (ws *WsStreamClient) sendUnSubscribeSuccessToCloseChan(args []string) {
 		}
 		if sub, ok := ws.tradeSubMap.Load(key); ok {
 			ws.tradeSubMap.Delete(key)
+			if sub.closeChan != nil {
+				sub.closeChan <- struct{}{}
+				sub.closeChan = nil
+			}
+		}
+		if sub, ok := ws.tickerSubMap.Load(key); ok {
+			ws.tickerSubMap.Delete(key)
 			if sub.closeChan != nil {
 				sub.closeChan <- struct{}{}
 				sub.closeChan = nil
@@ -770,6 +781,21 @@ func (ws *WsStreamClient) handleResult(resultChan chan []byte, errChan chan erro
 
 					key := c.Topic
 					if sub, ok := ws.tradeSubMap.Load(key); ok {
+						if err != nil {
+							sub.errChan <- err
+							continue
+						}
+						sub.resultChan <- *c
+					}
+					continue
+				}
+
+				//Ticker行情处理
+				if strings.Contains(string(data), "topic\":\"tickers") {
+					c, err := handleWsTicker(data)
+
+					key := c.Topic
+					if sub, ok := ws.tickerSubMap.Load(key); ok {
 						if err != nil {
 							sub.errChan <- err
 							continue

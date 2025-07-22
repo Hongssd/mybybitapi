@@ -420,3 +420,82 @@ func handleWsDoOrderResult[T OrderResType](data []byte) (*WsOrderResult[T], erro
 	}
 	return &wsOrderResult, nil
 }
+
+// Ticker WebSocket 数据结构定义
+type WsTickerMiddle struct {
+	CommonWsRes
+	Cs   int64         `json:"cs"`   //撮合版本號
+	Data WsTickerData  `json:"data"` //Ticker数据
+}
+
+type WsTicker struct {
+	CommonWsRes
+	Cs int64 `json:"cs"` //撮合版本號
+	WsTickerData
+}
+
+// Ticker 数据结构体 - 支持所有交易类型的字段
+type WsTickerData struct {
+	Symbol                string `json:"symbol"`                // 合約名稱
+	TickDirection         string `json:"tickDirection"`         // 價格變化方向
+	Price24hPcnt          string `json:"price24hPcnt"`          // 市場價格相對24h前變化的百分比
+	LastPrice             string `json:"lastPrice"`             // 最新市場成交價
+	PrevPrice24h          string `json:"prevPrice24h"`          // 24小時前的整點市價
+	HighPrice24h          string `json:"highPrice24h"`          // 最近24小時的最高價
+	LowPrice24h           string `json:"lowPrice24h"`           // 最近24小時的最低價
+	PrevPrice1h           string `json:"prevPrice1h"`           // 1小時前的整點市價
+	MarkPrice             string `json:"markPrice"`             // 標記價格
+	IndexPrice            string `json:"indexPrice"`            // 指數價格
+	OpenInterest          string `json:"openInterest"`          // 未平倉合約的數量
+	OpenInterestValue     string `json:"openInterestValue"`     // 未平倉合約的價值
+	Turnover24h           string `json:"turnover24h"`           // 最近24小時成交額
+	Volume24h             string `json:"volume24h"`             // 最近24小時成交量
+	NextFundingTime       string `json:"nextFundingTime"`       // 下次結算資金費用的時間戳 (毫秒)
+	FundingRate           string `json:"fundingRate"`           // 資金費率
+	Bid1Price             string `json:"bid1Price"`             // 買1價
+	Bid1Size              string `json:"bid1Size"`              // 買1價的數量
+	Ask1Price             string `json:"ask1Price"`             // 賣1價
+	Ask1Size              string `json:"ask1Size"`              // 賣1價的數量
+	DeliveryTime          string `json:"deliveryTime"`          // 交割日期時間 (UTC+0), 僅適用於交割合約
+	BasisRate             string `json:"basisRate"`             // 基差率. 反向交割和USDT/USDC交割獨有字段
+	DeliveryFeeRate       string `json:"deliveryFeeRate"`       // 交割費率. 反向交割和USDT/USDC交割獨有字段
+	PredictedDeliveryPrice string `json:"predictedDeliveryPrice"` // 預估交割價格. 反向交割和USDT/USDC交割獨有字段
+	PreOpenPrice          string `json:"preOpenPrice"`          // 盤前合約預估開盤價格
+	PreQty                string `json:"preQty"`                // 盤前合約預估開盤數量
+	CurPreListingPhase    string `json:"curPreListingPhase"`    // 當前盤前交易階段
+	
+	// Option 特有字段
+	BidPrice        string `json:"bidPrice"`        // 買1價 (期權)
+	BidSize         string `json:"bidSize"`         // 買1價的數量 (期權)
+	BidIv           string `json:"bidIv"`           // 買1價對應的iv
+	AskPrice        string `json:"askPrice"`        // 賣1價 (期權)  
+	AskSize         string `json:"askSize"`         // 賣1價的數量 (期權)
+	AskIv           string `json:"askIv"`           // 賣1價對應的iv
+	MarkPriceIv     string `json:"markPriceIv"`     // 標記價格對應的iv
+	UnderlyingPrice string `json:"underlyingPrice"` // 底層資產的價格
+	TotalVolume     string `json:"totalVolume"`     // 總成交量
+	TotalTurnover   string `json:"totalTurnover"`   // 總成交額
+	Delta           string `json:"delta"`           // Delta
+	Gamma           string `json:"gamma"`           // Gamma
+	Vega            string `json:"vega"`            // Vega
+	Theta           string `json:"theta"`           // Theta
+	Change24h       string `json:"change24h"`       // 過去24小時的變化
+	
+	// Spot 特有字段
+	UsdIndexPrice string `json:"usdIndexPrice"` // USD指數價格
+}
+
+func handleWsTicker(data []byte) (*WsTicker, error) {
+	wsTickerMiddle := WsTickerMiddle{}
+	err := json.Unmarshal(data, &wsTickerMiddle)
+	if err != nil {
+		return nil, err
+	}
+	
+	wsTicker := WsTicker{
+		CommonWsRes:  wsTickerMiddle.CommonWsRes,
+		Cs:           wsTickerMiddle.Cs,
+		WsTickerData: wsTickerMiddle.Data,
+	}
+	return &wsTicker, nil
+}
